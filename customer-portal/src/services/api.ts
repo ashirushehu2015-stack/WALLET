@@ -23,15 +23,15 @@ export const api = {
   // Auth API
   async register(data: { email: string; firstName: string; lastName: string; phoneNumber: string; password: string }) {
     const res = await apiClient.post('/auth/register', data);
-    return res.data;
+    return res.data.data;
   },
 
   async login(data: { email: string; password: string }) {
     const res = await apiClient.post('/auth/login', data);
-    return res.data;
+    return res.data.data;
   },
 
-  async getProfile(): Promise<{ user: UserProfile }> {
+  async getProfile(): Promise<UserProfile> {
     const res = await apiClient.get('/auth/me');
     return res.data.data;
   },

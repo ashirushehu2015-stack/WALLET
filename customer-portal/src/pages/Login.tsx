@@ -25,8 +25,8 @@ export const Login: React.FC<LoginProps> = ({ onSuccess, onSwitchToRegister }) =
     setLoading(true);
     try {
       const res = await api.login({ email, password });
-      localStorage.setItem('payvault_token', res.data.token);
-      onSuccess(res.data.token, res.data.user);
+      localStorage.setItem('payvault_token', res.token);
+      onSuccess(res.token, res.user);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Login failed.');
     } finally {

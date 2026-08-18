@@ -20,7 +20,7 @@ export const App: React.FC = () => {
 
     try {
       const data = await api.getProfile();
-      setUser(data.user);
+      setUser(data);
     } catch (err) {
       console.error('Session expired or invalid token');
       localStorage.removeItem('payvault_token');

@@ -34,8 +34,8 @@ export const Register: React.FC<RegisterProps> = ({ onSuccess, onSwitchToLogin }
         phoneNumber,
         password,
       });
-      localStorage.setItem('payvault_token', res.data.token);
-      onSuccess(res.data.token, res.data.user);
+      localStorage.setItem('payvault_token', res.token);
+      onSuccess(res.token, res.user);
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Registration failed.');
     } finally {
