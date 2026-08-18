@@ -1,0 +1,333 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+  BLOCKED
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum KYCStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum KYCTier {
+  TIER_1
+  TIER_2
+  TIER_3
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  INCOME
+  EXPENSE
+}
+
+enum JournalStatus {
+  POSTED
+  REVERSED
+}
+
+enum PostingType {
+  DEBIT
+  CREDIT
+}
+
+enum TransactionType {
+  DEPOSIT
+  WITHDRAWAL
+  TRANSFER
+  FEE
+  REVERSAL
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESS
+  FAILED
+  REVERSED
+}
+
+enum WithdrawalStatus {
+  PENDING
+  PROCESSING
+  SUCCESS
+  FAILED
+  REVERSED
+}
+
+enum WebhookStatus {
+  RECEIVED
+  PROCESSED
+  FAILED
+  IGNORED
+}
+
+enum ActorType {
+  USER
+  ADMIN
+  SYSTEM
+}
+
+enum ReconStatus {
+  MATCHED
+  DISCREPANCY_DETECTED
+  RESOLVED
+}
+
+model User {
+  id               String       @id @default(uuid())
+  email            String       @unique
+  phoneNumber      String       @unique
+  firstName        String
+  lastName         String
+  passwordHash     String
+  role             UserRole     @default(USER)
+  status           UserStatus   @default(ACTIVE)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+
+  kycRecord        KYCRecord?
+  walletAccount    WalletAccount?
+  dva              DedicatedVirtualAccount?
+  deposits         Deposit[]
+  withdrawals      Withdrawal[]
+  sentTransfers    Transfer[]    @relation("SentTransfers")
+  receivedTransfers Transfer[]   @relation("ReceivedTransfers")
+  auditLogs        AuditLog[]
+  idempotencyKeys  IdempotencyKey[]
+
+  @@map("users")
+}
+
+model KYCRecord {
+  id              String    @id @default(uuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  bvn             String?   // Encrypted
+  nin             String?   // Encrypted
+  tier            KYCTier   @default(TIER_1)
+  status          KYCStatus @default(PENDING)
+  rejectionReason String?
+  verifiedAt      DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@map("kyc_records")
+}
+
+model LedgerAccount {
+  id          String      @id @default(uuid())
+  name        String      @unique
+  type        AccountType
+  currency    String      @default("NGN")
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  walletAccount WalletAccount?
+  postings      LedgerPosting[]
+
+  @@map("ledger_accounts")
+}
+
+model WalletAccount {
+  id               String        @id @default(uuid())
+  userId           String        @unique
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  walletNumber     String        @unique
+  currency         String        @default("NGN")
+  ledgerAccountId  String        @unique
+  ledgerAccount    LedgerAccount @relation(fields: [ledgerAccountId], references: [id])
+  availableBalance Decimal       @default(0.0000) @db.Decimal(18, 4)
+  ledgerBalance    Decimal       @default(0.0000) @db.Decimal(18, 4)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@map("wallet_accounts")
+}
+
+model JournalEntry {
+  id          String        @id @default(uuid())
+  reference   String        @unique
+  description String
+  status      JournalStatus @default(POSTED)
+  postedAt    DateTime      @default(now())
+  createdAt   DateTime      @default(now())
+
+  postings    LedgerPosting[]
+  transaction Transaction?
+
+  @@map("journal_entries")
+}
+
+model LedgerPosting {
+  id              String        @id @default(uuid())
+  journalEntryId  String
+  journalEntry    JournalEntry  @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+  ledgerAccountId String
+  ledgerAccount   LedgerAccount @relation(fields: [ledgerAccountId], references: [id])
+  entryType       PostingType
+  amount          Decimal       @db.Decimal(18, 4)
+  createdAt       DateTime      @default(now())
+
+  @@map("ledger_postings")
+}
+
+model Transaction {
+  id             String            @id @default(uuid())
+  reference      String            @unique
+  idempotencyKey String?           @unique
+  type           TransactionType
+  journalEntryId String?           @unique
+  journalEntry   JournalEntry?     @relation(fields: [journalEntryId], references: [id])
+  amount         Decimal           @db.Decimal(18, 4)
+  fee            Decimal           @default(0.0000) @db.Decimal(18, 4)
+  currency       String            @default("NGN")
+  status         TransactionStatus @default(PENDING)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  deposit        Deposit?
+  withdrawal     Withdrawal?
+  transfer       Transfer?
+
+  @@map("transactions")
+}
+
+model DedicatedVirtualAccount {
+  id                    String   @id @default(uuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  paystackCustomerCode  String
+  accountNumber         String   @unique
+  accountName           String
+  bankName              String
+  bankCode              String
+  createdAt             DateTime @default(now())
+
+  @@map("dedicated_virtual_accounts")
+}
+
+model Deposit {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  transactionId     String   @unique
+  transaction       Transaction @relation(fields: [transactionId], references: [id])
+  paystackReference String   @unique
+  channel           String   @default("DVA")
+  amount            Decimal  @db.Decimal(18, 4)
+  paystackFee       Decimal  @default(0.0000) @db.Decimal(18, 4)
+  netAmount         Decimal  @db.Decimal(18, 4)
+  status            TransactionStatus @default(SUCCESS)
+  createdAt         DateTime @default(now())
+
+  @@map("deposits")
+}
+
+model Withdrawal {
+  id                    String           @id @default(uuid())
+  userId                String
+  user                  User             @relation(fields: [userId], references: [id])
+  transactionId         String           @unique
+  transaction           Transaction      @relation(fields: [transactionId], references: [id])
+  paystackTransferCode  String?          @unique
+  recipientCode         String
+  bankName              String
+  accountNumber         String
+  accountName           String
+  amount                Decimal          @db.Decimal(18, 4)
+  fee                   Decimal          @default(0.0000) @db.Decimal(18, 4)
+  status                WithdrawalStatus @default(PENDING)
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  @@map("withdrawals")
+}
+
+model Transfer {
+  id            String      @id @default(uuid())
+  senderId      String
+  sender        User        @relation("SentTransfers", fields: [senderId], references: [id])
+  recipientId   String
+  recipient     User        @relation("ReceivedTransfers", fields: [recipientId], references: [id])
+  transactionId String      @unique
+  transaction   Transaction @relation(fields: [transactionId], references: [id])
+  amount        Decimal     @db.Decimal(18, 4)
+  narration     String?
+  status        TransactionStatus @default(SUCCESS)
+  createdAt     DateTime    @default(now())
+
+  @@map("transfers")
+}
+
+model IdempotencyKey {
+  id             String   @id @default(uuid())
+  key            String   @unique
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id])
+  requestPath    String
+  responseStatus Int
+  responseBody   Json
+  createdAt      DateTime @default(now())
+
+  @@map("idempotency_keys")
+}
+
+model WebhookEvent {
+  id           String        @id @default(uuid())
+  eventId      String        @unique
+  eventType    String
+  payload      Json
+  status       WebhookStatus @default(RECEIVED)
+  errorMessage String?
+  processedAt  DateTime?
+  createdAt    DateTime      @default(now())
+
+  @@map("webhook_events")
+}
+
+model AuditLog {
+  id        String    @id @default(uuid())
+  actorId   String?
+  actor     User?     @relation(fields: [actorId], references: [id])
+  actorType ActorType @default(USER)
+  action    String
+  resource  String
+  ipAddress String?
+  details   Json?
+  createdAt DateTime  @default(now())
+
+  @@map("audit_logs")
+}
+
+model ReconciliationRecord {
+  id                    String      @id @default(uuid())
+  periodStart           DateTime
+  periodEnd             DateTime
+  totalPaystackDeposits Decimal     @db.Decimal(18, 4)
+  totalLedgerDeposits   Decimal     @db.Decimal(18, 4)
+  totalPaystackPayouts  Decimal     @db.Decimal(18, 4)
+  totalLedgerPayouts    Decimal     @db.Decimal(18, 4)
+  discrepancyAmount     Decimal     @db.Decimal(18, 4)
+  status                ReconStatus @default(MATCHED)
+  createdAt             DateTime    @default(now())
+
+  @@map("reconciliation_records")
+}

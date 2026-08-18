@@ -1,0 +1,28 @@
+{
+  "name": "fintech-wallet-system",
+  "version": "1.0.0",
+  "description": "Production-grade Fintech Wallet with Double-Entry Ledger and Paystack Integration",
+  "private": true,
+  "scripts": {
+    "setup": "npm run setup:backend && npm run setup:admin",
+    "setup:backend": "cd backend && npm install",
+    "setup:admin": "cd admin-dashboard && npm install",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:admin": "cd admin-dashboard && npm run dev",
+    "prisma:generate": "cd backend && npx prisma generate",
+    "prisma:migrate": "cd backend && npx prisma migrate dev",
+    "prisma:studio": "cd backend && npx prisma studio"
+  },
+  "keywords": [
+    "fintech",
+    "wallet",
+    "double-entry-ledger",
+    "paystack",
+    "dva",
+    "transfers",
+    "reconciliation",
+    "idempotency"
+  ],
+  "author": "",
+  "license": "MIT"
+}
