@@ -1,0 +1,79 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --color-background: #FDFBF7;
+    --color-surface: #FFFFFF;
+    --color-elevated: #F9F6F1;
+    --color-border: #EDE8E0;
+    --color-text-primary: #1C1917;
+    --color-text-secondary: #78716C;
+    --color-accent: #0F766E;
+    --color-accent-soft: #CCFBF1;
+    --shadow-soft: 0 4px 20px rgba(28, 25, 23, 0.06);
+  }
+
+  .dark {
+    --color-background: #141210;
+    --color-surface: #1E1B18;
+    --color-elevated: #2A2622;
+    --color-border: #3D3732;
+    --color-text-primary: #F5F2EB;
+    --color-text-secondary: #A8A096;
+    --color-accent: #14B8A6;
+    --color-accent-soft: #134E48;
+    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.4);
+  }
+}
+
+@theme {
+  --color-background: var(--color-background);
+  --color-surface: var(--color-surface);
+  --color-elevated: var(--color-elevated);
+  --color-border: var(--color-border);
+  --color-text-primary: var(--color-text-primary);
+  --color-text-secondary: var(--color-text-secondary);
+  --color-accent: var(--color-accent);
+  --color-accent-soft: var(--color-accent-soft);
+  --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  --radius-card: 16px;
+  --radius-sheet: 24px;
+  --shadow-soft: var(--shadow-soft);
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-background);
+  color: var(--color-text-primary);
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Perspective utilities for card flipping */
+.perspective-1000 {
+  perspective: 1000px;
+}
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
+.backface-hidden {
+  backface-visibility: hidden;
+}
+.rotate-y-180 {
+  transform: rotateY(180deg);
+}
+

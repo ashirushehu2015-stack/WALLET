@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/>
+<title>MangaPay – Wallet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin></script>
+<script src="https://unpkg.com/@babel/standalone@7.26.0/babel.min.js"></script>
+<style>
+:root{--bg:#FDFBF7;--surface:#FFFFFF;--elevated:#F9F6F1;--border:#EDE8E0;--text:#1C1917;--text-sec:#78716C;--accent:#0F766E;--accent-soft:#CCFBF1;--radius:16px;--sheet:24px;--shadow:0 4px 20px rgba(28,25,23,.06)}
+.dark{--bg:#141210;--surface:#1E1B18;--elevated:#2A2622;--border:#3D3732;--text:#F5F2EB;--text-sec:#A8A096;--accent:#14B8A6;--accent-soft:#134E48;--shadow:0 4px 20px rgba(0,0,0,.4)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Plus Jakarta Sans",system-ui,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;min-height:100dvh;transition:background .25s,color .25s}
+#root{max-width:430px;margin:0 auto;min-height:100dvh;position:relative;background:var(--bg)}
+.no-scroll::-webkit-scrollbar{display:none}.no-scroll{-ms-overflow-style:none;scrollbar-width:none}
+@keyframes spin{to{transform:rotate(360deg)}}.spin{animation:spin .7s linear infinite}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}.fade{animation:fadeUp .28s ease}
+button{font-family:inherit;cursor:pointer}
+input,select{font-family:inherit}
+
+.perspective-1000{perspective:1000px}
+.transform-style-3d{transform-style:preserve-3d}
+.backface-hidden{backface-visibility:hidden}
+.rotate-y-180{transform:rotateY(180deg)}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const {useState,useEffect,useCallback,useMemo}=React;
+
+// ── Mock state & helpers ──────────────────────────────────────
+let balance=248500;
+let virtualCards=[
+  {id:"vc1",cardholderName:"Alex Okoye",cardNumber:"4532 8901 2345 9812",expiryMonth:"08",expiryYear:"28",cvv:"492",cardType:"VISA",currency:"USD",balance:45.0,isFrozen:false,billingAddress:"14 Broad Street, Marina, Lagos"},
+  {id:"vc2",cardholderName:"Alex Okoye",cardNumber:"5399 4112 9084 3310",expiryMonth:"11",expiryYear:"27",cvv:"813",cardType:"MASTERCARD",currency:"NGN",balance:15000.0,isFrozen:false,billingAddress:"14 Broad Street, Marina, Lagos"},
+];
+
+let txs=[
+  {id:"1",type:"FUND",amount:50000,description:"Wallet funding via Paystack",reference:"MP-FND-88421",status:"SUCCESS",createdAt:Date.now()-45*6e4},
+  {id:"2",type:"SEND",amount:12500,description:"Sent to Chioma Okafor",counterparty:"Chioma Okafor",reference:"MP-SND-77310",status:"SUCCESS",createdAt:Date.now()-3*36e5},
+  {id:"3",type:"UTILITY",amount:3000,description:"MTN 3GB Data Bundle",counterparty:"08031234567",reference:"MP-UTL-71923",status:"SUCCESS",createdAt:Date.now()-5*36e5,categoryDetails:"Airtime & Data"},
+  {id:"4",type:"WITHDRAW",amount:30000,fee:100,description:"Payout to GTBank ****4521",reference:"MP-WTH-66209",status:"PROCESSING",createdAt:Date.now()-8*36e5},
+  {id:"5",type:"CARD_FUND",amount:7500,description:"Funded USD Virtual Visa Card",reference:"MP-VCR-99120",status:"SUCCESS",createdAt:Date.now()-18*36e5,categoryDetails:"Virtual Card"},
+  {id:"6",type:"SEND",amount:8500,description:"Sent to Tunde Bakare",counterparty:"Tunde Bakare",reference:"MP-SND-55198",status:"FAILED",createdAt:Date.now()-864e5},
+  {id:"7",type:"UTILITY",amount:12000,description:"IKEDC Electricity Token",counterparty:"0418-9921-341",reference:"MP-UTL-34190",status:"SUCCESS",createdAt:Date.now()-36*36e5,categoryDetails:"Meter Token: 4921-0012-9843-1120"},
+  {id:"8",type:"FUND",amount:100000,description:"Wallet funding via Paystack",reference:"MP-FND-44087",status:"SUCCESS",createdAt:Date.now()-2*864e5},
+  {id:"9",type:"WITHDRAW",amount:15000,fee:100,description:"Payout to Access Bank ****8832",reference:"MP-WTH-33976",status:"SUCCESS",createdAt:Date.now()-3*864e5},
+];
+
+const banks=[{id:"b1",name:"Alex Okoye",accountNumber:"0123456789",bankName:"GTBank"},{id:"b2",name:"Alex Okoye",accountNumber:"9876543210",bankName:"Access Bank"}];
+const dva={accountNumber:"9988776655",bankName:"Wema Bank (Paystack)"};
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+const naira=n=>new Intl.NumberFormat("en-NG",{style:"currency",currency:"NGN",minimumFractionDigits:2}).format(n);
+const rel=ts=>{const m=Math.floor((Date.now()-ts)/6e4);if(m<1)return "Just now";if(m<60)return m+"m ago";const h=Math.floor(m/60);if(h<24)return h+"h ago";return Math.floor(h/24)+"d ago"};
+const genRef=()=>Math.floor(Math.random()*9e4+1e4);
+
+// ── Icons ─────────────────────────────────────────────────────
+const Icon=({name,size=20,color="currentColor"})=>{
+  const p={
+    home:"M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2zM9 22V12h6v10",
+    clock:"M12 8v4l3 3M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z",
+    user:"M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z",
+    eye:"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8zM12 15a3 3 0 100-6 3 3 0 000 6z",
+    eyeOff:"M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24M1 1l22 22",
+    plus:"M12 5v14M5 12h14",
+    send:"M5 12h14M12 5l7 7-7 7",
+    down:"M19 12H5M12 19l-7-7 7-7",
+    x:"M18 6L6 18M6 6l12 12",
+    check:"M22 11.08V12a10 10 0 11-5.93-9.14M22 4L12 14.01l-3-3",
+    finger:"M12 10a2 2 0 100-4 2 2 0 000 4zM12 14v4M4.93 4.93a10 10 0 000 14.14M19.07 4.93a10 10 0 010 14.14",
+    search:"M11 19a8 8 0 100-16 8 8 0 000 16zM21 21l-4.35-4.35",
+    bank:"M3 21h18M5 21V7l7-4 7 4v14M9 21v-6h6v6",
+    del:"M21 4H8l-7 8 7 8h13a2 2 0 002-2V6a2 2 0 00-2-2zM18 9l-6 6M12 9l6 6",
+    shield:"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z",
+    card:"M21 4H3a2 2 0 00-2 2v12a2 2 0 002 2h18a2 2 0 002-2V6a2 2 0 00-2-2zM1 10h22",
+    badge:"M12 15a3 3 0 100-6 3 3 0 000 6zM22 12l-2.5 1.5.5 2.8-2.5-.7-2.5.7.5-2.8L13 12l2.5-1.5-.5-2.8 2.5.7 2.5-.7-.5 2.8z",
+    zap:"M13 2L3 14h9l-1 8 10-12h-9l1-8z",
+    phone:"M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z",
+    moon:"M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z",
+    sun:"M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42",
+    lock:"M19 11H5a2 2 0 00-2 2v7a2 2 0 002 2h14a2 2 0 002-2v-7a2 2 0 00-2-2zm-7 0V7a5 5 0 0110 0v4",
+    chevronRight:"M9 18l6-6-6-6",
+    share:"M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13",
+  };
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d={p[name]||""}/></svg>;
+};
+
+// ── Shared styles ────────────────────────────────────────────
+const sheetOverlay={position:"fixed",inset:0,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)",zIndex:50,display:"flex",alignItems:"flex-end",justifyContent:"center"};
+const sheetBox={background:"var(--surface)",color:"var(--text)",width:"100%",maxWidth:430,borderRadius:"24px 24px 0 0",padding:"24px 20px 32px",maxHeight:"90vh",overflowY:"auto",borderTop:"1px solid var(--border)"};
+const btnPrimary={width:"100%",height:54,borderRadius:16,background:"var(--accent)",color:"#fff",border:"none",fontWeight:600,fontSize:15};
+const inputBig={width:"100%",height:54,padding:"0 16px",borderRadius:16,background:"var(--elevated)",color:"var(--text)",border:"1px solid var(--border)",fontSize:22,fontWeight:600,outline:"none"};
+const inputSm={width:"100%",height:46,padding:"0 14px",borderRadius:16,background:"var(--elevated)",color:"var(--text)",border:"1px solid var(--border)",outline:"none",fontSize:14};
+
+// ── Paystack Checkout Modal ──────────────────────────────────
+function PaystackModal({open,amount,onClose,onSuccess}){
+  const [method,setMethod]=useState("card");
+  const [loading,setLoading]=useState(false);
+  const [copied,setCopied]=useState(false);
+
+  if(!open)return null;
+
+  const handlePay=async()=>{
+    setLoading(true);
+    await delay(1200);
+    setLoading(false);
+    onSuccess();
+  };
+
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.6)",backdropFilter:"blur(6px)",zIndex:60,display:"flex",alignItems:"center",justifyContent:"center",padding:16}}>
+      <div className="fade" style={{background:"var(--surface)",color:"var(--text)",width:"100%",maxWidth:400,borderRadius:24,border:"1px solid var(--border)",overflow:"hidden",boxShadow:"0 20px 25px -5px rgba(0,0,0,0.3)"}}>
+        <div style={{background:"var(--elevated)",padding:16,borderBottom:"1px solid var(--border)",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
+          <div style={{display:"flex",alignItems:"center",gap:10}}>
+            <div style={{width:32,height:32,borderRadius:8,background:"#059669",color:"#fff",fontWeight:800,fontSize:12,display:"flex",alignItems:"center",justifyContent:"center"}}>PS</div>
+            <div><p style={{fontWeight:700,fontSize:13}}>Paystack <span style={{fontSize:9,background:"#d1fae5",color:"#065f46",padding:"2px 4px",borderRadius:4}}>TEST</span></p><p style={{fontSize:11,color:"var(--text-sec)"}}>alex.okoye@example.com</p></div>
+          </div>
+          <div style={{textAlign:"right"}}><p style={{fontSize:11,color:"var(--text-sec)"}}>Pay MangaPay</p><p style={{fontWeight:800,fontSize:16,color:"#059669"}}>{naira(amount)}</p></div>
+        </div>
+
+        <div style={{display:"flex",borderBottom:"1px solid var(--border)",fontSize:12,fontWeight:600}}>
+          {["card","transfer","ussd"].map(m=>(
+            <button key={m} onClick={()=>setMethod(m)} style={{flex:1,padding:"12px 0",background:method===m?"rgba(5,150,105,0.08)":"none",border:"none",borderBottom:method===m?"2px solid #059669":"2px solid transparent",color:method===m?"#059669":"var(--text-sec)",textTransform:"capitalize"}}>{m}</button>
+          ))}
+        </div>
+
+        <div style={{padding:20}}>
+          {method==="card"&&(
+            <div style={{display:"flex",flexDirection:"column",gap:12}}>
+              <div style={{display:"flex",justifyContent:"space-between",fontSize:11}}><span style={{color:"var(--text-sec)"}}>Card details</span><span style={{color:"#059669",fontWeight:600,cursor:"pointer"}} onClick={()=>{}}>Use Demo Card</span></div>
+              <input style={inputSm} placeholder="5399 4100 8821 9012" defaultValue="5399 4100 8821 9012"/>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:10}}>
+                <input style={inputSm} placeholder="12/28" defaultValue="12/28"/>
+                <input style={inputSm} type="password" placeholder="891" defaultValue="891"/>
+              </div>
+            </div>
+          )}
+
+          {method==="transfer"&&(
+            <div style={{background:"rgba(5,150,105,0.06)",border:"1px solid rgba(5,150,105,0.2)",padding:16,borderRadius:16,textAlign:"center"}}>
+              <p style={{fontSize:11,color:"var(--text-sec)"}}>Transfer exact amount to Wema Bank:</p>
+              <p style={{fontSize:22,fontWeight:800,fontFamily:"monospace",margin:"8px 0",color:"var(--text)"}}>9988776655</p>
+              <button onClick={()=>{navigator.clipboard?.writeText("9988776655");setCopied(true);setTimeout(()=>setCopied(false),1500);}} style={{padding:"6px 12px",borderRadius:8,background:"var(--surface)",border:"1px solid var(--border)",fontSize:11,fontWeight:600,color:"var(--text)"}}>
+                {copied?"Copied!":"Copy Account"}
+              </button>
+            </div>
+          )}
+
+          {method==="ussd"&&(
+            <div style={{textAlign:"center",padding:10}}>
+              <p style={{fontSize:12,color:"var(--text-sec)"}}>Dial code on registered mobile number:</p>
+              <p style={{fontSize:18,fontWeight:800,fontFamily:"monospace",color:"#059669",marginTop:8}}>*737*000*882#</p>
+            </div>
+          )}
+        </div>
+
+        <div style={{padding:16,background:"var(--elevated)",borderTop:"1px solid var(--border)"}}>
+          <button onClick={handlePay} disabled={loading} style={{...btnPrimary,background:"#059669",height:48}}>
+            {loading?"Processing Payment…":`Pay ${naira(amount)}`}
+          </button>
+          <button onClick={onClose} style={{width:"100%",background:"none",border:"none",color:"var(--text-sec)",fontSize:12,marginTop:10}}>Cancel</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── PIN Modal ────────────────────────────────────────────────
+function PINModal({open,onClose,onSuccess,title}){
+  const [pin,setPin]=useState("");const [err,setErr]=useState(false);const [scan,setScan]=useState(false);
+  useEffect(()=>{if(!open){setPin("");setErr(false);setScan(false);}},[open]);
+  if(!open)return null;
+  const press=d=>{if(pin.length>=4)return;const n=pin+d;setPin(n);setErr(false);if(n.length===4)setTimeout(()=>{if(n==="1234")onSuccess();else{setErr(true);setPin("");}},180);};
+  return(
+    <div style={sheetOverlay}>
+      <div className="fade" style={sheetBox}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+          <h3 style={{fontSize:18,fontWeight:600}}>{title||"Enter PIN"}</h3>
+          <button onClick={onClose} style={{background:"none",border:"none",padding:8}}><Icon name="x" size={20} color="var(--text-sec)"/></button>
+        </div>
+        <div style={{display:"flex",justifyContent:"center",gap:12,marginBottom:16}}>
+          {[0,1,2,3].map(i=><div key={i} style={{width:14,height:14,borderRadius:"50%",border:"2px solid",borderColor:pin.length>i?(err?"#ef4444":"var(--accent)"):"var(--border)",background:pin.length>i?(err?"#ef4444":"var(--accent)"):"transparent"}}/>)}
+        </div>
+        {err&&<p style={{textAlign:"center",color:"#ef4444",fontSize:13,marginBottom:12}}>Incorrect PIN · Hint: 1234</p>}
+        <button onClick={()=>{setScan(true);setTimeout(()=>{setScan(false);onSuccess();},900);}} style={{width:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:8,padding:12,borderRadius:16,background:"var(--accent-soft)",color:"var(--accent)",border:"none",fontWeight:500,marginBottom:16}}>
+          <Icon name="finger" size={22} color="var(--accent)"/>{scan?"Scanning…":"Use Biometrics"}
+        </button>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10}}>
+          {["1","2","3","4","5","6","7","8","9","","0","del"].map((k,i)=>{
+            if(k==="")return <div key={i}/>;
+            return(
+              <button key={i} onClick={()=>k==="del"?setPin(p=>p.slice(0,-1)):press(k)} style={{height:56,borderRadius:16,background:"var(--elevated)",border:"1px solid var(--border)",fontSize:20,fontWeight:600,color:"var(--text)"}}>
+                {k==="del"?<Icon name="del" size={20} color="var(--text)"/>:k}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ── Success Modal ────────────────────────────────────────────
+function SuccessModal({open,onClose,title,amount,reference,message}){
+  if(!open)return null;
+  return(
+    <div style={{position:"fixed",inset:0,background:"rgba(0,0,0,.5)",backdropFilter:"blur(4px)",zIndex:60,display:"flex",alignItems:"center",justifyContent:"center",padding:20}}>
+      <div className="fade" style={{background:"var(--surface)",color:"var(--text)",width:"100%",maxWidth:360,borderRadius:24,padding:24,textAlign:"center",border:"1px solid var(--border)"}}>
+        <div style={{width:64,height:64,borderRadius:"50%",background:"var(--accent-soft)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 16px"}}>
+          <Icon name="check" size={32} color="var(--accent)"/>
+        </div>
+        <h3 style={{fontSize:20,fontWeight:700,marginBottom:4}}>{title}</h3>
+        <p style={{fontSize:13,color:"var(--text-sec)",marginBottom:16}}>{message}</p>
+        {amount!==undefined&&<p style={{fontSize:28,fontWeight:800,marginBottom:8,color:"var(--accent)"}}>{naira(amount)}</p>}
+        {reference&&<p style={{fontSize:11,fontFamily:"monospace",color:"var(--text-sec)",marginBottom:24}}>Ref: {reference}</p>}
+        <button onClick={onClose} style={btnPrimary}>Done</button>
+      </div>
+    </div>
+  );
+}
+
+// ── Home Screen ──────────────────────────────────────────────
+function HomeScreen({user,transactions,onFund,onSend,onWithdraw,onOpenServices,onOpenVirtualCards}){
+  const [hidden,setHidden]=useState(false);
+  const hour=new Date().getHours();
+  const greeting=hour<12?"Good morning":hour<17?"Good afternoon":"Good evening";
+  const recent=transactions.slice(0,5);
+
+  return(
+    <div style={{padding:"24px 16px 96px"}}>
+      <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}>
+        <div><p style={{fontSize:12,color:"var(--text-sec)",fontWeight:500}}>{greeting},</p><h1 style={{fontSize:20,fontWeight:800}}>{user.name}</h1></div>
+        <img src={user.avatar} alt="" style={{width:44,height:44,borderRadius:"50%",background:"var(--elevated)",border:"1px solid var(--border)"}}/>
+      </div>
+
+      {/* Balance Card */}
+      <div style={{background:"var(--surface)",borderRadius:20,padding:20,border:"1px solid var(--border)",boxShadow:"var(--shadow)",marginBottom:20}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:4}}>
+          <p style={{fontSize:12,color:"var(--text-sec)",fontWeight:500}}>Available Balance</p>
+          <button onClick={()=>setHidden(!hidden)} style={{background:"none",border:"none",padding:4}}><Icon name={hidden?"eyeOff":"eye"} size={18} color="var(--text-sec)"/></button>
+        </div>
+        <p style={{fontSize:30,fontWeight:800,letterSpacing:"-0.5px"}}>{hidden?"••••••••":naira(user.balance)}</p>
+        <div style={{marginTop:16,paddingTop:12,borderTop:"1px solid var(--border)",display:"flex",justifyContent:"space-between",fontSize:12,color:"var(--text-sec)"}}>
+          <span>DVA: {dva.accountNumber}</span><span style={{color:"var(--accent)",fontWeight:600}}>{dva.bankName}</span>
+        </div>
+      </div>
+
+      {/* Quick Actions */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,marginBottom:20}}>
+        {[
+          {label:"Fund",icon:"plus",act:onFund,bg:"var(--accent)",col:"#fff"},
+          {label:"Send",icon:"send",act:onSend,bg:"var(--elevated)",col:"var(--text)"},
+          {label:"Withdraw",icon:"down",act:onWithdraw,bg:"var(--elevated)",col:"var(--text)"},
+        ].map(b=>(
+          <button key={b.label} onClick={b.act} style={{height:76,borderRadius:16,background:b.bg,color:b.col,border:"1px solid var(--border)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6,fontWeight:600,fontSize:13}}>
+            <Icon name={b.icon} size={22} color={b.col}/><span>{b.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Services */}
+      <div style={{marginBottom:20}}>
+        <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:12}}>
+          <h2 style={{fontSize:14,fontWeight:700}}>Quick Services</h2>
+          <button onClick={onOpenServices} style={{background:"none",border:"none",color:"var(--accent)",fontSize:12,fontWeight:600}}>See All →</button>
+        </div>
+        <div style={{display:"grid",gridTemplateColumns:"repeat(4,1fr)",gap:8}}>
+          {[
+            {label:"Airtime",icon:"phone",act:onOpenServices},
+            {label:"Data",icon:"zap",act:onOpenServices},
+            {label:"Cable TV",icon:"shield",act:onOpenServices},
+            {label:"Cards",icon:"card",act:onOpenVirtualCards},
+          ].map(s=>(
+            <button key={s.label} onClick={s.act} style={{padding:"12px 4px",borderRadius:16,background:"var(--surface)",border:"1px solid var(--border)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:6}}>
+              <div style={{width:36,height:36,borderRadius:12,background:"var(--accent-soft)",color:"var(--accent)",display:"flex",alignItems:"center",justifyContent:"center"}}>
+                <Icon name={s.icon} size={18} color="var(--accent)"/>
+              </div>
+              <span style={{fontSize:11,fontWeight:600,color:"var(--text)"}}>{s.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Recent */}
+      <h2 style={{fontSize:14,fontWeight:700,marginBottom:12}}>Recent Activity</h2>
+      <div style={{display:"flex",flexDirection:"column",gap:8}}>
+        {recent.map(tx=>(
+          <div key={tx.id} style={{display:"flex",alignItems:"center",gap:12,padding:12,borderRadius:16,background:"var(--surface)",border:"1px solid var(--border)"}}>
+            <div style={{width:38,height:38,borderRadius:12,background:tx.type==="FUND"?"#d1fae5":tx.type==="SEND"?"#dbeafe":"#fef3c7",color:tx.type==="FUND"?"#059669":tx.type==="SEND"?"#2563eb":"#d97706",display:"flex",alignItems:"center",justifyContent:"center"}}>
+              <Icon name={tx.type==="FUND"?"plus":tx.type==="SEND"?"send":"down"} size={18}/>
+            </div>
+            <div style={{flex:1,minWidth:0}}>
+              <p style={{fontSize:13,fontWeight:600,whiteSpace:"nowrap",overflow:"hidden",textOverflow:"ellipsis"}}>{tx.description}</p>
+              <p style={{fontSize:11,color:"var(--text-sec)"}}>{rel(tx.createdAt)}</p>
+            </div>
+            <div style={{textAlign:"right"}}>
+              <p style={{fontSize:13,fontWeight:700,color:tx.type==="FUND"?"#059669":"var(--text)"}}>{tx.type==="FUND"?"+":"-"}{naira(tx.amount)}</p>
+              <span style={{fontSize:9,padding:"2px 6px",borderRadius:6,fontWeight:600,background:tx.status==="SUCCESS"?"#d1fae5":"#fef3c7",color:tx.status==="SUCCESS"?"#065f46":"#92400e"}}>{tx.status}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Profile Screen ───────────────────────────────────────────
+function ProfileScreen({user,darkMode,onToggleDarkMode}){
+  const [bio,setBio]=useState(true);
+  return(
+    <div style={{padding:"24px 16px 96px"}}>
+      <h1 style={{fontSize:20,fontWeight:800,marginBottom:20}}>Profile & Settings</h1>
+      <div style={{display:"flex",flexDirection:"column",alignItems:"center",marginBottom:24}}>
+        <img src={user.avatar} alt="" style={{width:76,height:76,borderRadius:"50%",background:"var(--elevated)",border:"2px solid var(--border)",marginBottom:12}}/>
+        <h2 style={{fontSize:18,fontWeight:700}}>{user.name} Okoye</h2>
+        <div style={{display:"flex",alignItems:"center",gap:6,marginTop:4,color:"var(--accent)",fontSize:12,fontWeight:600,background:"var(--accent-soft)",padding:"4px 12px",borderRadius:20}}>
+          <Icon name="badge" size={14} color="var(--accent)"/>Tier 1 KYC Verified
+        </div>
+      </div>
+
+      <p style={{fontSize:11,fontWeight:700,color:"var(--text-sec)",textTransform:"uppercase",marginBottom:8,paddingLeft:4}}>Appearance & Security</p>
+      <div style={{background:"var(--surface)",borderRadius:16,border:"1px solid var(--border)",marginBottom:20,overflow:"hidden"}}>
+        <button onClick={()=>onToggleDarkMode(!darkMode)} style={{width:"100%",display:"flex",alignItems:"center",gap:12,padding:16,background:"none",border:"none",textAlign:"left",borderBottom:"1px solid var(--border)"}}>
+          <Icon name={darkMode?"moon":"sun"} size={18} color="var(--accent)"/>
+          <div style={{flex:1}}><p style={{fontSize:13,fontWeight:600}}>Dark Mode (Soft Espresso)</p><p style={{fontSize:11,color:"var(--text-sec)"}}>{darkMode?"Warm dark active":"Milky light active"}</p></div>
+          <div style={{width:44,height:24,borderRadius:12,background:darkMode?"var(--accent)":"var(--border)",position:"relative",transition:".2s"}}>
+            <div style={{position:"absolute",top:2,width:20,height:20,borderRadius:"50%",background:"#fff",transform:darkMode?"translateX(22px)":"translateX(2px)",transition:".2s"}}/>
+          </div>
+        </button>
+        <button onClick={()=>setBio(!bio)} style={{width:"100%",display:"flex",alignItems:"center",gap:12,padding:16,background:"none",border:"none",textAlign:"left"}}>
+          <Icon name="finger" size={18} color="var(--accent)"/>
+          <div style={{flex:1}}><p style={{fontSize:13,fontWeight:600}}>Biometric Login</p><p style={{fontSize:11,color:"var(--text-sec)"}}>Face ID / Touch ID</p></div>
+          <div style={{width:44,height:24,borderRadius:12,background:bio?"var(--accent)":"var(--border)",position:"relative",transition:".2s"}}>
+            <div style={{position:"absolute",top:2,width:20,height:20,borderRadius:"50%",background:"#fff",transform:bio?"translateX(22px)":"translateX(2px)",transition:".2s"}}/>
+          </div>
+        </button>
+      </div>
+
+      <p style={{fontSize:11,fontWeight:700,color:"var(--text-sec)",textTransform:"uppercase",marginBottom:8,paddingLeft:4}}>Account</p>
+      <div style={{background:"var(--surface)",borderRadius:16,border:"1px solid var(--border)",marginBottom:20,overflow:"hidden"}}>
+        <div style={{display:"flex",alignItems:"center",gap:12,padding:16,borderBottom:"1px solid var(--border)"}}><Icon name="shield" size={18} color="var(--accent)"/><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600}}>KYC Status</p><p style={{fontSize:11,color:"var(--text-sec)"}}>Tier 1 · Daily Limit ₦500,000</p></div></div>
+        <div style={{display:"flex",alignItems:"center",gap:12,padding:16}}><Icon name="card" size={18} color="var(--accent)"/><div style={{flex:1}}><p style={{fontSize:13,fontWeight:600}}>Paystack DVA</p><p style={{fontSize:11,color:"var(--text-sec)"}}>{dva.accountNumber} · {dva.bankName}</p></div></div>
+      </div>
+      <p style={{textAlign:"center",fontSize:11,color:"var(--text-sec)",marginTop:30}}>MangaPay v1.2 · Antigravity Edition</p>
+    </div>
+  );
+}
+
+// ── Root App ─────────────────────────────────────────────────
+function App(){
+  const [tab,setTab]=useState("home");
+  const [user,setUser]=useState(null);
+  const [transactions,setTransactions]=useState([]);
+  const [loading,setLoading]=useState(true);
+  const [darkMode,setDarkMode]=useState(false);
+
+  const [fundOpen,setFundOpen]=useState(false);
+  const [sendOpen,setSendOpen]=useState(false);
+  const [withdrawOpen,setWithdrawOpen]=useState(false);
+  const [paystackOpen,setPaystackOpen]=useState(false);
+  const [paystackAmount,setPaystackAmount]=useState(0);
+
+  const [pinOpen,setPinOpen]=useState(false);
+  const [pending,setPending]=useState(null);
+  const [success,setSuccess]=useState(null);
+
+  const refresh=useCallback(async()=>{
+    await delay(150);
+    setUser({name:"Alex",avatar:"https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",balance,banks,dva});
+    setTransactions([...txs].sort((a,b)=>b.createdAt-a.createdAt));
+  },[]);
+
+  useEffect(()=>{refresh().finally(()=>setLoading(false));},[refresh]);
+
+  const toggleDark=(val)=>{
+    setDarkMode(val);
+    const root=document.getElementById("root");
+    if(val) root.classList.add("dark");
+    else root.classList.remove("dark");
+  };
+
+  const handleInitiatePaystack=(amt)=>{
+    setPaystackAmount(amt);
+    setPaystackOpen(true);
+  };
+
+  const handlePaystackSuccess=async()=>{
+    setPaystackOpen(false);
+    balance+=paystackAmount;
+    const tx={id:String(Date.now()),type:"FUND",amount:paystackAmount,description:"Wallet funding via Paystack",reference:"MP-FND-"+genRef(),status:"SUCCESS",createdAt:Date.now()};
+    txs=[tx,...txs];
+    await refresh();
+    setSuccess({title:"Wallet Funded",amount:paystackAmount,reference:tx.reference,message:"Funds are now available in your wallet."});
+  };
+
+  const onPinSuccess=async()=>{
+    setPinOpen(false);
+    if(!pending)return;
+    try{
+      if(pending.type==="send"){
+        if(pending.amount>balance)throw new Error("Insufficient balance");
+        await delay(800);
+        balance-=pending.amount;
+        const tx={id:String(Date.now()),type:"SEND",amount:pending.amount,description:pending.note||`Sent to ${pending.to}`,counterparty:pending.to,reference:"MP-SND-"+genRef(),status:"SUCCESS",createdAt:Date.now()};
+        txs=[tx,...txs];
+        await refresh();
+        setSuccess({title:"Money Sent",amount:pending.amount,reference:tx.reference,message:`Successfully sent to ${pending.to}`});
+      }else if(pending.type==="withdraw"){
+        const fee=100;
+        if(pending.amount+fee>balance)throw new Error("Insufficient balance");
+        await delay(900);
+        balance-=pending.amount+fee;
+        const bank=banks.find(b=>b.id===pending.bankId);
+        const tx={id:String(Date.now()),type:"WITHDRAW",amount:pending.amount,fee,description:`Payout to ${bank?.bankName||"Bank"} ****${bank?.accountNumber.slice(-4)}`,reference:"MP-WTH-"+genRef(),status:"PROCESSING",createdAt:Date.now()};
+        txs=[tx,...txs];
+        await refresh();
+        setSuccess({title:"Withdrawal Initiated",amount:pending.amount,reference:tx.reference,message:"Payout is being processed."});
+      }
+    }catch(e){setSuccess({title:"Failed",message:e.message||"Something went wrong"});}
+    finally{setPending(null);}
+  };
+
+  if(loading||!user)return <div style={{minHeight:"100dvh",display:"flex",alignItems:"center",justifyContent:"center"}}><div style={{width:32,height:32,border:"3px solid var(--accent)",borderTopColor:"transparent",borderRadius:"50%"}} className="spin"/></div>;
+
+  return(
+    <div style={{minHeight:"100dvh",background:"var(--bg)",color:"var(--text)"}}>
+      {tab==="home"&&<HomeScreen user={user} transactions={transactions} onFund={()=>setFundOpen(true)} onSend={()=>setSendOpen(true)} onWithdraw={()=>setWithdrawOpen(true)} onOpenServices={()=>{}} onOpenVirtualCards={()=>{}}/>}
+      {tab==="profile"&&<ProfileScreen user={user} darkMode={darkMode} onToggleDarkMode={toggleDark}/>}
+      
+      {/* Bottom Tabs */}
+      <div style={{position:"fixed",bottom:0,left:0,right:0,maxWidth:430,margin:"0 auto",background:"var(--surface)",borderTop:"1px solid var(--border)",display:"flex",height:64,zIndex:40}}>
+        {[
+          {id:"home",label:"Home",icon:"home"},
+          {id:"profile",label:"Profile",icon:"user"},
+        ].map(t=>(
+          <button key={t.id} onClick={()=>setTab(t.id)} style={{flex:1,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",background:"none",border:"none",color:tab===t.id?"var(--accent)":"var(--text-sec)",fontSize:11,fontWeight:600}}>
+            <Icon name={t.icon} size={20} color={tab===t.id?"var(--accent)":"var(--text-sec)"}/>
+            <span>{t.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* Fund Sheet */}
+      {fundOpen&&(
+        <div style={sheetOverlay}>
+          <div className="fade" style={sheetBox}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginBottom:20}}><h3 style={{fontSize:18,fontWeight:700}}>Fund Wallet</h3><button onClick={()=>setFundOpen(false)} style={{background:"none",border:"none"}}><Icon name="x" size={20} color="var(--text-sec)"/></button></div>
+            <input style={inputBig} type="number" placeholder="Enter amount (₦)" onChange={(e)=>setPaystackAmount(Number(e.target.value))}/>
+            <button onClick={()=>{setFundOpen(false);setPaystackOpen(true);}} style={{...btnPrimary,marginTop:20}}>Proceed to Paystack</button>
+          </div>
+        </div>
+      )}
+
+      <PaystackModal open={paystackOpen} amount={paystackAmount} onClose={()=>setPaystackOpen(false)} onSuccess={handlePaystackSuccess}/>
+      <PINModal open={pinOpen} onClose={()=>{setPinOpen(false);setPending(null);}} onSuccess={onPinSuccess} title={pending?.type==="send"?"Confirm Transfer":"Confirm Withdrawal"}/>
+      <SuccessModal open={!!success} onClose={()=>setSuccess(null)} title={success?.title||""} amount={success?.amount} reference={success?.reference} message={success?.message}/>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
