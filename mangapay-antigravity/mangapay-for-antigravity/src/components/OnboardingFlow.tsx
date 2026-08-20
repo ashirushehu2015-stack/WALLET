@@ -6,7 +6,6 @@ import {
   AlertCircle,
   HelpCircle,
   ArrowRight,
-  Sparkles,
   Fingerprint,
   Lock,
   Loader2,
@@ -214,22 +213,28 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
           {step === 1 && (
             <div className="flex-1 flex flex-col justify-between py-6">
               <div className="flex-1 flex flex-col items-center justify-center text-center">
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-emerald-600 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-600/30 mb-6">
-                  <ShieldCheck size={44} className="text-white" />
+                {/* Soft green shield logo with subtle/no glow */}
+                <div className="w-20 h-20 rounded-3xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
+                  <ShieldCheck size={44} className="text-emerald-600 dark:text-emerald-400" />
                 </div>
+
                 <h1 className="text-3xl font-extrabold tracking-tight text-text-primary">
-                  Manga<span className="text-emerald-600">Pay</span>
+                  MangaPay
                 </h1>
                 <p className="text-sm text-text-secondary mt-2 font-medium">
                   Your money, simplified.
                 </p>
+
+                {/* Soft pill badge */}
                 <div className="mt-8 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-                  <Sparkles size={14} className="text-emerald-600" />
-                  <span>Licensed Double-Entry Fintech Engine</span>
+                  <ShieldCheck size={14} className="text-emerald-600 shrink-0" />
+                  <span>CBN Licensed Fintech</span>
                 </div>
               </div>
 
+              {/* Action Buttons */}
               <div className="space-y-3">
+                {/* Primary green button */}
                 <button
                   onClick={() => setStep(2)}
                   className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition flex items-center justify-center gap-2"
@@ -237,6 +242,8 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
                   <span>Get Started</span>
                   <ArrowRight size={18} />
                 </button>
+
+                {/* Secondary light button */}
                 <button
                   onClick={() => setStep(8)}
                   className="w-full h-12 rounded-2xl border border-border bg-elevated hover:bg-surface text-text-primary font-semibold text-xs transition"
