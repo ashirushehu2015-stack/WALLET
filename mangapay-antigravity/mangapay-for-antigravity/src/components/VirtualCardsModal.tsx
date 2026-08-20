@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, CreditCard, Plus, Lock, Unlock, Eye, EyeOff, ShieldCheck, Check, Sparkles } from "lucide-react";
+import { X, CreditCard, Plus, Lock, Unlock, Eye, EyeOff, Sparkles } from "lucide-react";
 import { formatNaira, type VirtualCard } from "../api/api";
 
 interface Props {

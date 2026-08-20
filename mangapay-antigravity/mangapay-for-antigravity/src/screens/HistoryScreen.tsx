@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, ArrowUpRight, ArrowDownLeft, Zap, CreditCard, Download, Check, Share2 } from "lucide-react";
+import { Search, Plus, ArrowUpRight, ArrowDownLeft, Zap, CreditCard, Check, Share2 } from "lucide-react";
 import {
   formatNaira,
   formatRelative,

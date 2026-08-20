@@ -10,7 +10,6 @@ import {
   Sun,
   Plus,
   X,
-  PlusCircle,
 } from "lucide-react";
 import type { User } from "../api/api";
 
