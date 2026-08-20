@@ -11,7 +11,7 @@ import {
   Plus,
   X,
 } from "lucide-react";
-import type { User } from "../api/api";
+import { type User, NIGERIAN_BANKS } from "../api/api";
 
 interface Props {
   user: User;
@@ -205,9 +205,9 @@ export default function ProfileScreen({
                   onChange={(e) => setBankName(e.target.value)}
                   className="w-full h-11 px-3 rounded-xl bg-elevated border border-border text-xs font-semibold outline-none focus:border-accent"
                 >
-                  {["Kuda Bank", "OPay", "Palmpay", "Zenith Bank", "FirstBank", "Stanbic IBTC"].map((b) => (
-                    <option key={b} value={b}>
-                      {b}
+                  {NIGERIAN_BANKS.map((b) => (
+                    <option key={b.name} value={b.name}>
+                      {b.name} ({b.code})
                     </option>
                   ))}
                 </select>

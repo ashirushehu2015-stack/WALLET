@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { CreditCard, Building, Phone, Copy, CheckCircle2, ShieldCheck, Lock, Loader2 } from "lucide-react";
-import { formatNaira } from "../api/api";
+import { CreditCard, Building, Phone, Copy, CheckCircle2, ShieldCheck, Lock, Loader2, Search } from "lucide-react";
+import { formatNaira, NIGERIAN_BANKS } from "../api/api";
 
 interface Props {
   open: boolean;
@@ -25,8 +25,11 @@ export default function PaystackModal({
   const [cvv, setCvv] = useState("");
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [selectedBank, setSelectedBank] = useState("GTBank");
+  const [selectedBank, setSelectedBank] = useState("GTBank (Guaranty Trust Bank)");
+  const [bankSearch, setBankSearch] = useState("");
   const [timer, setTimer] = useState(1799); // 30 mins
+
+  const selectedBankObj = NIGERIAN_BANKS.find((b) => b.name === selectedBank) || NIGERIAN_BANKS[0];
 
   useEffect(() => {
     if (!open) return;
@@ -202,36 +205,50 @@ export default function PaystackModal({
 
           {method === "ussd" && (
             <div className="space-y-4">
-              <label className="block text-xs font-medium text-text-secondary mb-1">
-                Select your Bank
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {[
-                  { name: "GTBank", code: "*737*33*AMOUNT#" },
-                  { name: "Zenith Bank", code: "*966*000*AMOUNT#" },
-                  { name: "Access Bank", code: "*901*000*AMOUNT#" },
-                  { name: "UBA", code: "*919*00*AMOUNT#" },
-                ].map((b) => (
+              <div>
+                <label className="block text-xs font-medium text-text-secondary mb-1">
+                  Select your Bank
+                </label>
+                <div className="relative mb-2">
+                  <input
+                    type="text"
+                    value={bankSearch}
+                    onChange={(e) => setBankSearch(e.target.value)}
+                    placeholder="Search 30+ Nigerian Banks (e.g. OPay, Kuda, First Bank)..."
+                    className="w-full h-10 px-3 text-xs rounded-xl bg-elevated border border-border text-text-primary focus:outline-none focus:border-emerald-600"
+                  />
+                  <Search className="absolute right-3 top-3 text-text-secondary" size={14} />
+                </div>
+              </div>
+
+              <div className="max-h-44 overflow-y-auto grid grid-cols-2 gap-2 pr-1 custom-scrollbar">
+                {NIGERIAN_BANKS.filter((b) =>
+                  b.name.toLowerCase().includes(bankSearch.toLowerCase())
+                ).map((b) => (
                   <button
                     key={b.name}
                     type="button"
                     onClick={() => setSelectedBank(b.name)}
-                    className={`p-3 rounded-xl border text-left text-xs font-semibold transition ${
+                    className={`p-2.5 rounded-xl border text-left text-xs font-semibold transition ${
                       selectedBank === b.name
                         ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300"
-                        : "border-border bg-elevated text-text-primary"
+                        : "border-border bg-elevated text-text-primary hover:bg-surface"
                     }`}
                   >
-                    {b.name}
+                    <span className="block truncate">{b.name}</span>
+                    <span className="text-[10px] text-text-secondary font-mono">{b.code}</span>
                   </button>
                 ))}
               </div>
-              <div className="p-3 bg-elevated rounded-xl border border-border text-center">
-                <p className="text-xs text-text-secondary">Dial code on your mobile phone:</p>
-                <p className="font-mono font-bold text-sm mt-1 text-emerald-600">
-                  {selectedBank === "GTBank" ? "*737*000*882#" : selectedBank === "Zenith Bank" ? "*966*000*882#" : selectedBank === "Access Bank" ? "*901*000*882#" : "*919*000*882#"}
-                </p>
-              </div>
+
+              {selectedBankObj && (
+                <div className="p-3 bg-elevated rounded-xl border border-border text-center">
+                  <p className="text-xs text-text-secondary">Dial code on your mobile phone for {selectedBankObj.name}:</p>
+                  <p className="font-mono font-bold text-sm mt-1 text-emerald-600">
+                    {selectedBankObj.ussd}000*882#
+                  </p>
+                </div>
+              )}
             </div>
           )}
         </div>

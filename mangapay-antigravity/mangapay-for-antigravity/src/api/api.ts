@@ -14,6 +14,46 @@ export interface Transaction {
   categoryDetails?: string;
 }
 
+export interface BankInfo {
+  name: string;
+  code: string;
+  ussd: string;
+  category: "Commercial" | "Fintech / MFB" | "Non-Interest";
+}
+
+export const NIGERIAN_BANKS: BankInfo[] = [
+  { name: "Access Bank", code: "044", ussd: "*901*", category: "Commercial" },
+  { name: "Fidelity Bank", code: "070", ussd: "*770*", category: "Commercial" },
+  { name: "First Bank of Nigeria", code: "011", ussd: "*894*", category: "Commercial" },
+  { name: "FCMB (First City Monument Bank)", code: "214", ussd: "*329*", category: "Commercial" },
+  { name: "GTBank (Guaranty Trust Bank)", code: "058", ussd: "*737*", category: "Commercial" },
+  { name: "Union Bank of Nigeria", code: "032", ussd: "*826*", category: "Commercial" },
+  { name: "United Bank for Africa (UBA)", code: "033", ussd: "*919*", category: "Commercial" },
+  { name: "Zenith Bank", code: "057", ussd: "*966*", category: "Commercial" },
+  { name: "Ecobank Nigeria", code: "050", ussd: "*326*", category: "Commercial" },
+  { name: "Heritage Bank", code: "030", ussd: "*745*", category: "Commercial" },
+  { name: "Keystone Bank", code: "082", ussd: "*7111*", category: "Commercial" },
+  { name: "Polaris Bank", code: "076", ussd: "*833*", category: "Commercial" },
+  { name: "Stanbic IBTC Bank", code: "221", ussd: "*909*", category: "Commercial" },
+  { name: "Standard Chartered Bank", code: "068", ussd: "*977*", category: "Commercial" },
+  { name: "Sterling Bank", code: "232", ussd: "*822*", category: "Commercial" },
+  { name: "Titan Trust Bank", code: "102", ussd: "*922*", category: "Commercial" },
+  { name: "Unity Bank", code: "215", ussd: "*7799*", category: "Commercial" },
+  { name: "Wema Bank", code: "035", ussd: "*945*", category: "Commercial" },
+  { name: "OPay Digital Services", code: "999992", ussd: "*955*", category: "Fintech / MFB" },
+  { name: "Kuda Microfinance Bank", code: "50211", ussd: "*5583*", category: "Fintech / MFB" },
+  { name: "PalmPay", code: "999991", ussd: "*861*", category: "Fintech / MFB" },
+  { name: "Moniepoint Microfinance Bank", code: "50315", ussd: "*5573*", category: "Fintech / MFB" },
+  { name: "VFD Microfinance Bank", code: "566", ussd: "*566*", category: "Fintech / MFB" },
+  { name: "Rubies Bank", code: "125", ussd: "*125*", category: "Fintech / MFB" },
+  { name: "Raven Bank", code: "51318", ussd: "*513*", category: "Fintech / MFB" },
+  { name: "FairMoney MFB", code: "51310", ussd: "*513*", category: "Fintech / MFB" },
+  { name: "Dot Microfinance Bank", code: "50162", ussd: "*501*", category: "Fintech / MFB" },
+  { name: "Jaiz Bank", code: "301", ussd: "*773*", category: "Non-Interest" },
+  { name: "TAJBank", code: "302", ussd: "*898*", category: "Non-Interest" },
+  { name: "Lotus Bank", code: "303", ussd: "*5045*", category: "Non-Interest" },
+];
+
 export interface BankAccount {
   id: string;
   name: string;
