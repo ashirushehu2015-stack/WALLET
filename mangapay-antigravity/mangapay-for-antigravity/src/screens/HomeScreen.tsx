@@ -15,6 +15,7 @@ interface Props {
   onWithdraw: () => void;
   onOpenServices: () => void;
   onOpenVirtualCards: () => void;
+  onOpenOnboarding?: () => void;
   onRefresh: () => void;
 }
 
@@ -26,6 +27,7 @@ export default function HomeScreen({
   onWithdraw,
   onOpenServices,
   onOpenVirtualCards,
+  onOpenOnboarding,
 }: Props) {
   const [hidden, setHidden] = useState(false);
 
@@ -49,11 +51,21 @@ export default function HomeScreen({
           <p className="text-xs text-text-secondary font-medium">{greeting},</p>
           <h1 className="text-xl font-bold text-text-primary tracking-tight">{user.name}</h1>
         </div>
-        <img
-          src={user.avatar}
-          alt=""
-          className="w-11 h-11 rounded-full bg-elevated border border-border shadow-sm object-cover"
-        />
+        <div className="flex items-center gap-2">
+          {onOpenOnboarding && (
+            <button
+              onClick={onOpenOnboarding}
+              className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition flex items-center gap-1"
+            >
+              <span>🚀 Test Onboarding</span>
+            </button>
+          )}
+          <img
+            src={user.avatar}
+            alt=""
+            className="w-11 h-11 rounded-full bg-elevated border border-border shadow-sm object-cover"
+          />
+        </div>
       </div>
 
       {/* Balance Card */}

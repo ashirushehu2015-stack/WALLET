@@ -11,6 +11,7 @@ import VirtualCardsModal from "./components/VirtualCardsModal";
 import PaystackModal from "./components/PaystackModal";
 import PINModal from "./components/PINModal";
 import SuccessModal from "./components/SuccessModal";
+import OnboardingFlow from "./components/OnboardingFlow";
 import {
   getUser,
   getTransactions,
@@ -58,6 +59,7 @@ export default function App() {
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [virtualCardsOpen, setVirtualCardsOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState(false);
 
   // Paystack Modal State
   const [paystackOpen, setPaystackOpen] = useState(false);
@@ -267,6 +269,7 @@ export default function App() {
           onWithdraw={() => setWithdrawOpen(true)}
           onOpenServices={() => setServicesOpen(true)}
           onOpenVirtualCards={() => setVirtualCardsOpen(true)}
+          onOpenOnboarding={() => setOnboardingOpen(true)}
           onRefresh={refresh}
         />
       )}
@@ -352,6 +355,24 @@ export default function App() {
         amount={success?.amount}
         reference={success?.reference}
         message={success?.message}
+      />
+
+      <OnboardingFlow
+        open={onboardingOpen}
+        onClose={() => setOnboardingOpen(false)}
+        onCompleteOnboarding={(data) => {
+          if (user) {
+            setUser({
+              ...user,
+              name: `${data.firstName} ${data.lastName}`,
+              tier: data.kycTier,
+            });
+          }
+          setSuccess({
+            title: "Welcome to MangaPay!",
+            message: `Account created successfully (${data.kycTier}). Ready to use!`,
+          });
+        }}
       />
     </div>
   );
