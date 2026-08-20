@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, Building2 } from "lucide-react";
+import { X, Building2, Search } from "lucide-react";
 import { formatNaira } from "../api/api";
 
 interface Bank {
@@ -26,22 +26,29 @@ export default function WithdrawBottomSheet({
 }: Props) {
   const [step, setStep] = useState<"form" | "review">("form");
   const [bankId, setBankId] = useState(banks[0]?.id || "");
+  const [searchQuery, setSearchQuery] = useState("");
   const [amount, setAmount] = useState("");
   const [loading, setLoading] = useState(false);
 
   if (!open) return null;
 
+  const filteredBanks = banks.filter(
+    (b) =>
+      b.bankName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      b.accountNumber.includes(searchQuery)
+  );
+
   const numeric = Number(amount.replace(/,/g, "")) || 0;
   const fee = 100;
   const total = numeric + fee;
-  const canContinue =
-    bankId && numeric >= 500 && total <= balance;
+  const canContinue = bankId && numeric >= 500 && total <= balance;
 
   const selected = banks.find((b) => b.id === bankId);
 
   const reset = () => {
     setStep("form");
     setAmount("");
+    setSearchQuery("");
   };
 
   const handleConfirm = async () => {
@@ -60,7 +67,7 @@ export default function WithdrawBottomSheet({
       <div className="bg-surface w-full max-w-md rounded-t-[24px] p-6 pb-8 shadow-soft max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-semibold">
-            {step === "form" ? "Withdraw" : "Review Payout"}
+            {step === "form" ? "Withdraw Funds" : "Review Payout"}
           </h3>
           <button
             onClick={() => {
@@ -78,31 +85,65 @@ export default function WithdrawBottomSheet({
 
         {step === "form" ? (
           <>
-            <label className="block text-sm text-text-secondary mb-1.5">
-              Bank Account
-            </label>
-            <div className="space-y-2 mb-4">
-              {banks.map((b) => (
-                <button
-                  key={b.id}
-                  onClick={() => setBankId(b.id)}
-                  className={`w-full flex items-center gap-3 p-3 rounded-2xl border transition text-left ${
-                    bankId === b.id
-                      ? "border-accent bg-accent-soft"
-                      : "border-border bg-elevated"
-                  }`}
-                >
-                  <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center">
-                    <Building2 size={18} className="text-accent" />
-                  </div>
-                  <div>
-                    <p className="font-medium text-sm">{b.bankName}</p>
-                    <p className="text-xs text-text-secondary">
-                      {b.accountNumber} · {b.name}
-                    </p>
-                  </div>
-                </button>
-              ))}
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="block text-sm font-medium text-text-secondary">
+                Select Payout Bank / MMO
+              </label>
+              <span className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400">
+                {banks.length} Accounts Saved
+              </span>
+            </div>
+
+            <div className="relative mb-3">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search Bank or MMO (OPay, PalmPay, Moniepoint)..."
+                className="w-full h-10 px-3 pr-9 text-xs rounded-xl bg-elevated border border-border text-text-primary focus:outline-none focus:border-accent"
+              />
+              <Search className="absolute right-3 top-3 text-text-secondary" size={14} />
+            </div>
+
+            <div className="space-y-2 mb-4 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+              {filteredBanks.map((b) => {
+                const isMMO =
+                  b.bankName.includes("OPay") ||
+                  b.bankName.includes("PalmPay") ||
+                  b.bankName.includes("Moniepoint") ||
+                  b.bankName.includes("Kuda");
+
+                return (
+                  <button
+                    key={b.id}
+                    onClick={() => setBankId(b.id)}
+                    className={`w-full flex items-center justify-between p-3 rounded-2xl border transition text-left ${
+                      bankId === b.id
+                        ? "border-accent bg-accent-soft"
+                        : "border-border bg-elevated hover:bg-surface"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-surface flex items-center justify-center border border-border">
+                        <Building2 size={18} className="text-accent" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-semibold text-xs text-text-primary">{b.bankName}</p>
+                          {isMMO && (
+                            <span className="px-1.5 py-0.5 text-[9px] font-bold rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                              MMO
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-text-secondary">
+                          {b.accountNumber} · {b.name}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
             </div>
 
             <label className="block text-sm text-text-secondary mb-1.5">

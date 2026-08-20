@@ -249,8 +249,12 @@ const user: User = {
   tier: "Tier 1",
   biometricEnabled: true,
   banks: [
-    { id: "b1", name: "Alex Okoye", accountNumber: "0123456789", bankName: "GTBank" },
+    { id: "b1", name: "Alex Okoye", accountNumber: "0123456789", bankName: "GTBank (Guaranty Trust Bank)" },
     { id: "b2", name: "Alex Okoye", accountNumber: "9876543210", bankName: "Access Bank" },
+    { id: "b3", name: "Alex Okoye", accountNumber: "7012345678", bankName: "OPay Digital Services" },
+    { id: "b4", name: "Alex Okoye", accountNumber: "8098765432", bankName: "PalmPay" },
+    { id: "b5", name: "Alex Okoye", accountNumber: "5543210987", bankName: "Moniepoint Microfinance Bank" },
+    { id: "b6", name: "Alex Okoye", accountNumber: "2019876543", bankName: "Kuda Microfinance Bank" },
   ],
   dva: { accountNumber: "9988776655", bankName: "Wema Bank (Paystack)" },
 };
