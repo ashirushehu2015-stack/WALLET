@@ -4,8 +4,8 @@
   "description": "Fintech Wallet Backend with Double-Entry Ledger & Paystack Engine",
   "main": "dist/server.js",
   "scripts": {
-    "build": "prisma generate && tsc",
-    "render-build": "prisma generate && tsc",
+    "build": "npx --yes prisma@5.10.0 generate && npx --yes tsc",
+    "render-build": "npx --yes prisma@5.10.0 generate && npx --yes tsc",
     "start": "node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "prisma:generate": "prisma generate",
