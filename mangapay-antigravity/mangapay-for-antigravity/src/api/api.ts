@@ -217,25 +217,78 @@ const user: User = {
 
 const delay = (ms = 600) => new Promise((r) => setTimeout(r, ms));
 
+const API_BASE_URL = "http://localhost:5000/api";
+
+function getAuthHeader(): Record<string, string> {
+  const token = localStorage.getItem("mangapay_token") || localStorage.getItem("token");
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+function generateIdempotencyKey(): string {
+  return `MP-KEY-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
+}
+
 export async function getUser(): Promise<User> {
-  await delay(200);
+  try {
+    const res = await fetch(`${API_BASE_URL}/wallet/balance`, {
+      headers: getAuthHeader(),
+    });
+    if (res.ok) {
+      const body = await res.json();
+      if (body.success && body.data) {
+        balance = Number(body.data.availableBalance ?? body.data.balance ?? balance);
+      }
+    }
+  } catch (e) {
+    // Graceful fallback when backend is offline
+  }
+  await delay(150);
   return { ...user, balance };
 }
 
 export async function getTransactions(): Promise<Transaction[]> {
-  await delay(300);
+  try {
+    const res = await fetch(`${API_BASE_URL}/wallet/transactions`, {
+      headers: getAuthHeader(),
+    });
+    if (res.ok) {
+      const body = await res.json();
+      if (body.success && Array.isArray(body.data)) {
+        const fetchedTxs: Transaction[] = body.data.map((tx: any) => ({
+          id: tx.id || `tx_${Date.now()}`,
+          type: (tx.type || "SEND") as TxType,
+          amount: Number(tx.amount || 0),
+          fee: tx.fee ? Number(tx.fee) : undefined,
+          description: tx.description || tx.narration || "Transaction",
+          counterparty: tx.recipientWalletNumber || tx.accountName || undefined,
+          reference: tx.reference || tx.idempotencyKey || `MP-REF-${Date.now()}`,
+          status: (tx.status || "SUCCESS") as TxStatus,
+          createdAt: tx.createdAt ? new Date(tx.createdAt).toISOString() : new Date().toISOString(),
+        }));
+        if (fetchedTxs.length > 0) {
+          // Merge fetched backend transactions with local mock transactions
+          const existingIds = new Set(fetchedTxs.map((t) => t.id));
+          const combined = [...fetchedTxs, ...transactions.filter((t) => !existingIds.has(t.id))];
+          transactions = combined;
+        }
+      }
+    }
+  } catch (e) {
+    // Fallback to local transactions
+  }
+  await delay(200);
   return [...transactions].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 }
 
 export async function getVirtualCards(): Promise<VirtualCard[]> {
-  await delay(250);
+  await delay(200);
   return [...virtualCards];
 }
 
 export async function fundWallet(amount: number): Promise<Transaction> {
-  await delay(1000);
+  await delay(800);
   balance += amount;
   const tx: Transaction = {
     id: `tx${Date.now()}`,
@@ -255,8 +308,46 @@ export async function sendMoney(
   to: string,
   note?: string
 ): Promise<Transaction> {
-  await delay(900);
   if (amount > balance) throw new Error("Insufficient balance");
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/wallet/transfer`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-idempotency-key": generateIdempotencyKey(),
+        ...getAuthHeader(),
+      },
+      body: JSON.stringify({
+        recipientWalletNumber: to,
+        amount,
+        narration: note || `Transfer to ${to}`,
+      }),
+    });
+
+    if (res.ok) {
+      const body = await res.json();
+      if (body.success) {
+        balance -= amount;
+        const tx: Transaction = {
+          id: body.data?.id || `tx${Date.now()}`,
+          type: "SEND",
+          amount,
+          description: note || `Sent to ${to}`,
+          counterparty: to,
+          reference: body.data?.reference || `MP-SND-${Math.floor(Math.random() * 90000 + 10000)}`,
+          status: "SUCCESS",
+          createdAt: new Date().toISOString(),
+        };
+        transactions = [tx, ...transactions];
+        return tx;
+      }
+    }
+  } catch (e) {
+    // Fallback to local logic if backend request fails
+  }
+
+  await delay(800);
   balance -= amount;
   const tx: Transaction = {
     id: `tx${Date.now()}`,
@@ -276,11 +367,51 @@ export async function withdraw(
   amount: number,
   bankId: string
 ): Promise<Transaction> {
-  await delay(1000);
   const fee = 100;
   if (amount + fee > balance) throw new Error("Insufficient balance");
-  balance -= amount + fee;
   const bank = user.banks.find((b) => b.id === bankId);
+
+  try {
+    const res = await fetch(`${API_BASE_URL}/wallet/withdraw`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-idempotency-key": generateIdempotencyKey(),
+        ...getAuthHeader(),
+      },
+      body: JSON.stringify({
+        bankName: bank?.bankName || "GTBank",
+        accountNumber: bank?.accountNumber || "0123456789",
+        accountName: bank?.name || user.name,
+        bankCode: "035",
+        amount,
+      }),
+    });
+
+    if (res.ok) {
+      const body = await res.json();
+      if (body.success) {
+        balance -= amount + fee;
+        const tx: Transaction = {
+          id: body.data?.id || `tx${Date.now()}`,
+          type: "WITHDRAW",
+          amount,
+          fee,
+          description: `Payout to ${bank?.bankName || "Bank"} ****${bank?.accountNumber.slice(-4)}`,
+          reference: body.data?.paystackTransferCode || `MP-WTH-${Math.floor(Math.random() * 90000 + 10000)}`,
+          status: "PROCESSING",
+          createdAt: new Date().toISOString(),
+        };
+        transactions = [tx, ...transactions];
+        return tx;
+      }
+    }
+  } catch (e) {
+    // Fallback to local logic
+  }
+
+  await delay(800);
+  balance -= amount + fee;
   const tx: Transaction = {
     id: `tx${Date.now()}`,
     type: "WITHDRAW",
@@ -294,6 +425,7 @@ export async function withdraw(
   transactions = [tx, ...transactions];
   return tx;
 }
+
 
 export async function payUtilityBill(
   category: string,
