@@ -59,7 +59,9 @@ export default function App() {
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [virtualCardsOpen, setVirtualCardsOpen] = useState(false);
-  const [onboardingOpen, setOnboardingOpen] = useState(false);
+  const [onboardingOpen, setOnboardingOpen] = useState<boolean>(() => {
+    return localStorage.getItem("mangapay_onboarded") !== "true";
+  });
 
   // Paystack Modal State
   const [paystackOpen, setPaystackOpen] = useState(false);
@@ -359,8 +361,12 @@ export default function App() {
 
       <OnboardingFlow
         open={onboardingOpen}
-        onClose={() => setOnboardingOpen(false)}
+        onClose={() => {
+          localStorage.setItem("mangapay_onboarded", "true");
+          setOnboardingOpen(false);
+        }}
         onCompleteOnboarding={(data) => {
+          localStorage.setItem("mangapay_onboarded", "true");
           if (user) {
             setUser({
               ...user,
