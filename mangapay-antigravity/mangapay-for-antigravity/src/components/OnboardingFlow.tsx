@@ -7,6 +7,11 @@ import {
   HelpCircle,
   ArrowRight,
   Sparkles,
+  Fingerprint,
+  Lock,
+  Loader2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
 interface Props {
@@ -30,6 +35,13 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
   const [pin, setPin] = useState("");
   const [confirmPin, setConfirmPin] = useState("");
   const [pinStep, setPinStep] = useState<"create" | "confirm">("create");
+
+  // Login State
+  const [loginAccount, setLoginAccount] = useState("08031234567");
+  const [loginPin, setLoginPin] = useState("");
+  const [showLoginPin, setShowLoginPin] = useState(false);
+  const [loginError, setLoginError] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -110,6 +122,49 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
     setStep(7);
   };
 
+  const handlePerformLogin = async () => {
+    if (loginAccount.trim().length < 5) {
+      setLoginError("Please enter your registered phone number or username");
+      return;
+    }
+    if (loginPin.length < 4) {
+      setLoginError("Please enter your registered 4-digit or 6-digit PIN");
+      return;
+    }
+
+    setLoginLoading(true);
+    setLoginError("");
+    await new Promise((r) => setTimeout(r, 900));
+    setLoginLoading(false);
+
+    localStorage.setItem("mangapay_token", "token_alex_okoye_auth");
+    localStorage.setItem("mangapay_onboarded", "true");
+    onCompleteOnboarding({
+      firstName: "Alex",
+      lastName: "Okoye",
+      phone: loginAccount.startsWith("+") ? loginAccount : `+234${loginAccount}`,
+      kycTier: "Tier 2",
+    });
+    onClose();
+  };
+
+  const handleBiometricLogin = async () => {
+    setLoginLoading(true);
+    setLoginError("");
+    await new Promise((r) => setTimeout(r, 700));
+    setLoginLoading(false);
+
+    localStorage.setItem("mangapay_token", "token_alex_okoye_biometrics");
+    localStorage.setItem("mangapay_onboarded", "true");
+    onCompleteOnboarding({
+      firstName: "Alex",
+      lastName: "Okoye",
+      phone: "+2348031234567",
+      kycTier: "Tier 2",
+    });
+    onClose();
+  };
+
   const handleFinishOnboarding = () => {
     onCompleteOnboarding({
       firstName: firstName || "Alex",
@@ -183,7 +238,7 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
                   <ArrowRight size={18} />
                 </button>
                 <button
-                  onClick={onClose}
+                  onClick={() => setStep(8)}
                   className="w-full h-12 rounded-2xl border border-border bg-elevated hover:bg-surface text-text-primary font-semibold text-xs transition"
                 >
                   Already have an account? Log in
@@ -558,6 +613,104 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
                   className="w-full h-12 rounded-2xl border border-border bg-elevated hover:bg-surface text-text-primary font-semibold text-xs transition"
                 >
                   Explore App
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* SCREEN 8: Login Credential Verification Screen */}
+          {step === 8 && (
+            <div className="flex-1 flex flex-col justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-text-primary">Welcome Back</h2>
+                <p className="text-xs text-text-secondary mt-1">
+                  Enter your registered details to log in to MangaPay.
+                </p>
+
+                <div className="mt-6 space-y-4">
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">
+                      Phone Number or Username
+                    </label>
+                    <input
+                      type="text"
+                      value={loginAccount}
+                      onChange={(e) => setLoginAccount(e.target.value)}
+                      placeholder="0803 123 4567 or @alex"
+                      className="w-full h-12 px-4 text-xs font-semibold rounded-xl bg-elevated border border-border text-text-primary outline-none focus:border-emerald-600"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-text-secondary mb-1">
+                      6-Digit Transaction PIN / Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showLoginPin ? "text" : "password"}
+                        maxLength={6}
+                        value={loginPin}
+                        onChange={(e) => setLoginPin(e.target.value.replace(/[^0-9]/g, ""))}
+                        placeholder="••••••"
+                        className="w-full h-12 px-4 pr-10 text-sm font-mono font-bold tracking-widest rounded-xl bg-elevated border border-border text-text-primary outline-none focus:border-emerald-600"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPin(!showLoginPin)}
+                        className="absolute right-3 top-3 text-text-secondary hover:text-text-primary"
+                      >
+                        {showLoginPin ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+
+                  {loginError && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl flex items-center gap-2 text-xs text-red-600 font-medium">
+                      <AlertCircle size={16} className="shrink-0 text-red-500" />
+                      <span>{loginError}</span>
+                    </div>
+                  )}
+
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={handleBiometricLogin}
+                      disabled={loginLoading}
+                      className="w-full py-3 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs hover:bg-emerald-500/20 transition flex items-center justify-center gap-2"
+                    >
+                      <Fingerprint size={18} className="text-emerald-600" />
+                      <span>Quick Login with Biometrics (Touch ID)</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <button
+                  type="button"
+                  onClick={handlePerformLogin}
+                  disabled={loginLoading || loginAccount.length < 5 || loginPin.length < 4}
+                  className="w-full h-14 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-sm shadow-md transition disabled:opacity-40 flex items-center justify-center gap-2"
+                >
+                  {loginLoading ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      <span>Verifying Credentials...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={16} />
+                      <span>Log In to MangaPay</span>
+                    </>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setStep(1)}
+                  className="w-full h-12 rounded-2xl border border-border bg-elevated text-text-secondary hover:text-text-primary font-semibold text-xs transition"
+                >
+                  Back to Welcome Screen
                 </button>
               </div>
             </div>
