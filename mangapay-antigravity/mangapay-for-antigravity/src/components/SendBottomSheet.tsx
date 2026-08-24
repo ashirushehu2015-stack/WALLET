@@ -178,42 +178,90 @@ export default function SendBottomSheet({
 
             {/* Bank or MMO Mode */}
             {(destType === "bank" || destType === "mmo") && (
-              <div className="space-y-3 mb-4">
+              <div className="space-y-3.5 mb-4">
                 <div>
-                  <label className="block text-xs font-medium text-text-secondary mb-1">
-                    Select {destType === "bank" ? "Commercial Bank" : "MMO / Fintech Operator"}
-                  </label>
-                  <div className="relative mb-2">
-                    <input
-                      type="text"
-                      value={bankSearch}
-                      onChange={(e) => setBankSearch(e.target.value)}
-                      placeholder={
-                        destType === "bank"
-                          ? "Search GTBank, Zenith, Access, First Bank..."
-                          : "Search OPay, PalmPay, Moniepoint, Kuda..."
-                      }
-                      className="w-full h-10 px-3 text-xs rounded-xl bg-elevated border border-border text-text-primary outline-none focus:border-emerald-600"
-                    />
-                    <Search className="absolute right-3 top-3 text-text-secondary" size={14} />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="block text-xs font-medium text-text-secondary">
+                      Select {destType === "bank" ? "Commercial Bank" : "MMO / Fintech Operator"}
+                    </label>
+                    {selectedBank && (
+                      <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200">
+                        Code: {selectedBank.code}
+                      </span>
+                    )}
                   </div>
 
-                  <div className="max-h-36 overflow-y-auto grid grid-cols-2 gap-1.5 pr-1 custom-scrollbar">
-                    {filteredActiveBanks.map((b) => (
-                      <button
-                        key={b.name}
-                        type="button"
-                        onClick={() => setSelectedBank(b)}
-                        className={`p-2 rounded-xl border text-left text-xs font-semibold transition ${
-                          selectedBank.name === b.name
-                            ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-300"
-                            : "border-border bg-elevated text-text-primary hover:bg-surface"
-                        }`}
-                      >
-                        <span className="block truncate">{b.name}</span>
-                        <span className="text-[10px] text-text-secondary font-mono">{b.code}</span>
-                      </button>
-                    ))}
+                  {/* Search Input Box */}
+                  <div className="relative mb-2">
+                    <div className="flex items-center h-12 rounded-xl bg-elevated border border-border px-3.5 focus-within:border-emerald-600 focus-within:bg-surface transition">
+                      <Building2 size={16} className="text-emerald-600 mr-2.5 shrink-0" />
+                      <input
+                        type="text"
+                        value={bankSearch}
+                        onChange={(e) => setBankSearch(e.target.value)}
+                        placeholder={
+                          destType === "bank"
+                            ? "Search GTBank, Zenith, FCMB, Access..."
+                            : "Search OPay, PalmPay, Moniepoint, Kuda..."
+                        }
+                        className="w-full bg-transparent text-xs font-semibold outline-none text-text-primary placeholder:text-text-secondary"
+                      />
+                      {bankSearch ? (
+                        <button
+                          type="button"
+                          onClick={() => setBankSearch("")}
+                          className="p-1 text-text-secondary hover:text-text-primary shrink-0"
+                        >
+                          <X size={14} />
+                        </button>
+                      ) : (
+                        <Search className="text-text-secondary shrink-0" size={15} />
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Clean Full-Width Single-Column Bank Selection List */}
+                  <div className="max-h-44 overflow-y-auto space-y-1.5 p-1.5 rounded-xl border border-border bg-surface shadow-xs no-scrollbar">
+                    {filteredActiveBanks.length > 0 ? (
+                      filteredActiveBanks.map((b) => {
+                        const isSelected = selectedBank.name === b.name;
+                        return (
+                          <button
+                            key={b.name}
+                            type="button"
+                            onClick={() => {
+                              setSelectedBank(b);
+                              setBankSearch(b.name);
+                            }}
+                            className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-left text-xs font-semibold transition ${
+                              isSelected
+                                ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 shadow-xs"
+                                : "border-transparent bg-elevated/40 text-text-primary hover:bg-elevated hover:border-border"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 overflow-hidden pr-2">
+                              <div
+                                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-extrabold ${
+                                  isSelected
+                                    ? "bg-emerald-600 text-white"
+                                    : "bg-elevated text-emerald-700 dark:text-emerald-400 border border-border"
+                                }`}
+                              >
+                                {b.name.charAt(0)}
+                              </div>
+                              <span className="truncate text-xs font-bold">{b.name}</span>
+                            </div>
+                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-surface border border-border shrink-0 text-text-secondary">
+                              {b.code}
+                            </span>
+                          </button>
+                        );
+                      })
+                    ) : (
+                      <div className="p-3 text-center text-xs font-medium text-text-secondary">
+                        No bank matching "{bankSearch}"
+                      </div>
+                    )}
                   </div>
                 </div>
 
