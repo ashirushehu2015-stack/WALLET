@@ -1,0 +1,24 @@
+{
+  "name": "MangaPay - Fintech Wallet",
+  "short_name": "MangaPay",
+  "description": "Your money, simplified. Instant transfers, virtual cards, utility bills, and double-entry ledger security.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#F8F9FA",
+  "theme_color": "#0D7377",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://api.iconify.design/lucide:shield-check.svg?color=%230D7377",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://api.iconify.design/lucide:shield-check.svg?color=%230D7377",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
