@@ -31,7 +31,7 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
   const [loginPassword, setLoginPassword] = useState("••••••••");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
-  const [fullName, setFullName] = useState("Ashiru Shehu");
+  const [fullName, setFullName] = useState("Chinedu Okonkwo");
   const [regPhone, setRegPhone] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");

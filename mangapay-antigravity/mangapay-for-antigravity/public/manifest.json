@@ -1,7 +1,7 @@
 {
   "id": "https://wallet-nu-ten-73.vercel.app/",
-  "name": "MangaPay - Fintech Wallet",
-  "short_name": "MangaPay",
+  "name": "Mangapay Agent",
+  "short_name": "Mangapay Agent",
   "description": "Your money, simplified. Instant transfers, virtual cards, utility bills, and double-entry ledger security.",
   "start_url": "/",
   "display": "standalone",

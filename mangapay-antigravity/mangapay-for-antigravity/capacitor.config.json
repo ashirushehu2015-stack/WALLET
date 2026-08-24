@@ -1,6 +1,6 @@
 {
-  "appId": "com.mangapay.wallet",
-  "appName": "MangaPay",
+  "appId": "com.mangapay.agent",
+  "appName": "Mangapay Agent",
   "webDir": "dist",
   "server": {
     "url": "https://wallet-nu-ten-73.vercel.app",
