@@ -1,0 +1,12 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.vercel.wallet_nu_ten_73.twa",
+      "sha256_cert_fingerprints": [
+        "10:ED:12:F5:1C:37:A2:3B:56:88:99:A0:BC:DE:F1:23:45:67:89:AB:CD:EF:01:23:45:67:89:AB:CD:EF:01:23"
+      ]
+    }
+  }
+]
