@@ -59,9 +59,7 @@ export default function App() {
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
   const [virtualCardsOpen, setVirtualCardsOpen] = useState(false);
-  const [onboardingOpen, setOnboardingOpen] = useState<boolean>(() => {
-    return localStorage.getItem("mangapay_onboarded") !== "true";
-  });
+  const [onboardingOpen, setOnboardingOpen] = useState<boolean>(true);
 
   // Paystack Modal State
   const [paystackOpen, setPaystackOpen] = useState(false);
@@ -283,6 +281,12 @@ export default function App() {
           onToggleDarkMode={handleToggleDarkMode}
           onToggleBiometric={() => {}}
           onAddBank={handleAddBank}
+          onLogOut={() => {
+            localStorage.removeItem("mangapay_token");
+            localStorage.removeItem("mangapay_onboarded");
+            setOnboardingOpen(true);
+            setTab("home");
+          }}
         />
       )}
 

@@ -19,6 +19,7 @@ interface Props {
   onToggleDarkMode: (enabled: boolean) => void;
   onToggleBiometric: (enabled: boolean) => void;
   onAddBank: (bankName: string, accountNumber: string, name: string) => Promise<void>;
+  onLogOut?: () => void;
 }
 
 export default function ProfileScreen({
@@ -27,6 +28,7 @@ export default function ProfileScreen({
   onToggleDarkMode,
   onToggleBiometric,
   onAddBank,
+  onLogOut,
 }: Props) {
   const [bio, setBio] = useState(user.biometricEnabled);
   const [addBankOpen, setAddBankOpen] = useState(false);
@@ -243,7 +245,15 @@ export default function ProfileScreen({
         </div>
       )}
 
-      <p className="text-center text-[11px] text-text-secondary mt-8">
+      {/* Log Out Button */}
+      <button
+        onClick={onLogOut}
+        className="w-full h-12 rounded-2xl border border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400 font-bold text-xs hover:bg-red-500/20 transition flex items-center justify-center gap-2 mt-4"
+      >
+        <span>Log Out of MangaPay</span>
+      </button>
+
+      <p className="text-center text-[11px] text-text-secondary mt-6">
         MangaPay v1.2 · Antigravity Edition
       </p>
     </div>
