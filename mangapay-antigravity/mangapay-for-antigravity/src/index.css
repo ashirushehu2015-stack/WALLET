@@ -2,27 +2,28 @@
 
 @layer base {
   :root {
-    --color-background: #FDFBF7;
-    --color-surface: #FFFFFF;
-    --color-elevated: #F9F6F1;
-    --color-border: #EDE8E0;
-    --color-text-primary: #1C1917;
-    --color-text-secondary: #78716C;
-    --color-accent: #0F766E;
-    --color-accent-soft: #CCFBF1;
-    --shadow-soft: 0 4px 20px rgba(28, 25, 23, 0.06);
+    /* Premium Milky Off-White Color Palette */
+    --color-background: #FAF8F5; /* Warm Luxurious Milky Off-White */
+    --color-surface: #FFFFFF;    /* Crisp Pure White Cards */
+    --color-elevated: #F3EFE6;   /* Soft Cream / Milky Pill & Input containers */
+    --color-border: #E8E2D5;     /* Warm Cream Borders */
+    --color-text-primary: #1C1917;   /* Deep Warm Charcoal */
+    --color-text-secondary: #6C645C; /* Warm Taupe Subtitles */
+    --color-accent: #0A7A4B;     /* MangaPay Emerald Green */
+    --color-accent-soft: #E6F4ED;/* Soft Mint Accent */
+    --shadow-soft: 0 4px 24px rgba(28, 25, 23, 0.06);
   }
 
   .dark {
-    --color-background: #141210;
-    --color-surface: #1E1B18;
-    --color-elevated: #2A2622;
-    --color-border: #3D3732;
-    --color-text-primary: #F5F2EB;
+    --color-background: #181715;
+    --color-surface: #22201D;
+    --color-elevated: #2E2B27;
+    --color-border: #3D3934;
+    --color-text-primary: #FAF8F5;
     --color-text-secondary: #A8A096;
-    --color-accent: #14B8A6;
-    --color-accent-soft: #134E48;
-    --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.4);
+    --color-accent: #0A7A4B;
+    --color-accent-soft: #134E32;
+    --shadow-soft: 0 4px 24px rgba(0, 0, 0, 0.4);
   }
 }
 
@@ -36,8 +37,8 @@
   --color-accent: var(--color-accent);
   --color-accent-soft: var(--color-accent-soft);
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
-  --radius-card: 16px;
-  --radius-sheet: 24px;
+  --radius-card: 20px;
+  --radius-sheet: 28px;
   --shadow-soft: var(--shadow-soft);
 }
 
@@ -76,4 +77,3 @@ body {
 .rotate-y-180 {
   transform: rotateY(180deg);
 }
-
