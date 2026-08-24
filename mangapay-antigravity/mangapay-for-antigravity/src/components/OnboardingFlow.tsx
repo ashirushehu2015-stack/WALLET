@@ -214,8 +214,8 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
             <div className="flex-1 flex flex-col justify-between py-6">
               <div className="flex-1 flex flex-col items-center justify-center text-center">
                 {/* Soft green shield logo with subtle/no glow */}
-                <div className="w-20 h-20 rounded-3xl overflow-hidden shadow-md mb-6 border border-emerald-500/20">
-                  <img src="/app_logo.jpg" alt="MangaPay Logo" className="w-full h-full object-cover" />
+                <div className="w-24 h-24 rounded-3xl overflow-hidden shadow-md mb-6 border border-emerald-500/20">
+                  <img src="/app_logo_interchanged.jpg" alt="MangaPay Logo" className="w-full h-full object-cover" />
                 </div>
 
                 <h1 className="text-3xl font-extrabold tracking-tight text-text-primary">

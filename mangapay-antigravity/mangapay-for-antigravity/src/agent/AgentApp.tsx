@@ -180,7 +180,7 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
             <div className="flex-1 flex flex-col items-center justify-center">
               {/* Centered Large White M logo inside a rounded square */}
               <div className="w-24 h-24 rounded-[28px] overflow-hidden shadow-2xl mb-8 border-4 border-white/20">
-                <img src="/app_logo.jpg" alt="Mangapay Agent Logo" className="w-full h-full object-cover" />
+                <img src="/app_logo_interchanged_alt.jpg" alt="Mangapay Agent Logo" className="w-full h-full object-cover" />
               </div>
 
               <h1 className="text-4xl font-extrabold tracking-tight">
