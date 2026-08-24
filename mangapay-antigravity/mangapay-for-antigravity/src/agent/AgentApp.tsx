@@ -196,7 +196,7 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
             </div>
 
             {/* Bottom Button: Get Started (Gold background, Dark text) */}
-            <div className="space-y-3 pb-4">
+            <div className="space-y-3 pb-2">
               <button
                 onClick={() => setScreen("login")}
                 className="w-full h-15 rounded-2xl bg-[#F5C518] hover:bg-[#e0b313] text-[#1A1A1A] font-extrabold text-base shadow-xl transition flex items-center justify-center gap-2 active:scale-95"
@@ -204,6 +204,16 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
                 <span>Get Started</span>
                 <ArrowRight size={20} />
               </button>
+
+              <div className="text-center text-[11px] text-emerald-100/90 flex items-center justify-center gap-3 font-medium">
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-[#F5C518]">
+                  Privacy Policy
+                </a>
+                <span>•</span>
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-[#F5C518]">
+                  Terms of Service
+                </a>
+              </div>
             </div>
           </div>
         )}
@@ -300,6 +310,17 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
                   Register
                 </button>
               </p>
+
+              {/* Footer Legal Links */}
+              <div className="pt-2 text-center text-[11px] text-gray-500 flex items-center justify-center gap-3 font-medium">
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-[#0A7A4B]">
+                  Privacy Policy
+                </a>
+                <span>•</span>
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-[#0A7A4B]">
+                  Terms of Service
+                </a>
+              </div>
             </div>
           </div>
         )}
