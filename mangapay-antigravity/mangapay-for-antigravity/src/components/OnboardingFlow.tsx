@@ -250,6 +250,17 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
                 >
                   Already have an account? Log in
                 </button>
+
+                {/* Footer Legal Links */}
+                <div className="pt-1 text-center text-[11px] text-text-secondary flex items-center justify-center gap-3 font-medium">
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-emerald-600">
+                    Privacy Policy
+                  </a>
+                  <span>•</span>
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-emerald-600">
+                    Terms of Service
+                  </a>
+                </div>
               </div>
             </div>
           )}

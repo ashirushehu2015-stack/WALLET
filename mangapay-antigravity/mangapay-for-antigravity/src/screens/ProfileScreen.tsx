@@ -253,9 +253,18 @@ export default function ProfileScreen({
         <span>Log Out of MangaPay</span>
       </button>
 
-      <p className="text-center text-[11px] text-text-secondary mt-6">
-        MangaPay v1.2 · Antigravity Edition
-      </p>
+      <div className="text-center text-[11px] text-text-secondary mt-6 space-y-1 font-medium">
+        <div className="flex items-center justify-center gap-3">
+          <a href="/privacy" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-accent">
+            Privacy Policy
+          </a>
+          <span>•</span>
+          <a href="/terms" target="_blank" rel="noopener noreferrer" className="hover:underline hover:text-accent">
+            Terms of Service
+          </a>
+        </div>
+        <p>MangaPay v1.2 · Antigravity Edition</p>
+      </div>
     </div>
   );
 }

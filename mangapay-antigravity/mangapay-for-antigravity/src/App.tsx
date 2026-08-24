@@ -13,6 +13,8 @@ import PINModal from "./components/PINModal";
 import SuccessModal from "./components/SuccessModal";
 import OnboardingFlow from "./components/OnboardingFlow";
 import AgentApp from "./agent/AgentApp";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import {
   getUser,
   getTransactions,
@@ -251,6 +253,46 @@ export default function App() {
       setPending(null);
     }
   };
+
+  const [route, setRoute] = useState<string>(() => window.location.pathname);
+
+  useEffect(() => {
+    const handlePopState = () => {
+      setRoute(window.location.pathname);
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
+  if (route === "/privacy") {
+    return (
+      <PrivacyPolicy
+        onBackToHome={() => {
+          window.history.pushState({}, "", "/");
+          setRoute("/");
+        }}
+        onNavigateToTerms={() => {
+          window.history.pushState({}, "", "/terms");
+          setRoute("/terms");
+        }}
+      />
+    );
+  }
+
+  if (route === "/terms") {
+    return (
+      <TermsOfService
+        onBackToHome={() => {
+          window.history.pushState({}, "", "/");
+          setRoute("/");
+        }}
+        onNavigateToPrivacy={() => {
+          window.history.pushState({}, "", "/privacy");
+          setRoute("/privacy");
+        }}
+      />
+    );
+  }
 
   if (loading || !user) {
     return (
