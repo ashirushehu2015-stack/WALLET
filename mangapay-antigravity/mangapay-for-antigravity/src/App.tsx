@@ -12,6 +12,7 @@ import PaystackModal from "./components/PaystackModal";
 import PINModal from "./components/PINModal";
 import SuccessModal from "./components/SuccessModal";
 import OnboardingFlow from "./components/OnboardingFlow";
+import AgentApp from "./agent/AgentApp";
 import {
   getUser,
   getTransactions,
@@ -60,6 +61,7 @@ export default function App() {
   const [servicesOpen, setServicesOpen] = useState(false);
   const [virtualCardsOpen, setVirtualCardsOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState<boolean>(true);
+  const [agentModeOpen, setAgentModeOpen] = useState(false);
 
   // Paystack Modal State
   const [paystackOpen, setPaystackOpen] = useState(false);
@@ -270,6 +272,7 @@ export default function App() {
           onOpenServices={() => setServicesOpen(true)}
           onOpenVirtualCards={() => setVirtualCardsOpen(true)}
           onOpenOnboarding={() => setOnboardingOpen(true)}
+          onOpenAgent={() => setAgentModeOpen(true)}
           onRefresh={refresh}
         />
       )}
@@ -384,6 +387,10 @@ export default function App() {
           });
         }}
       />
+
+      {agentModeOpen && (
+        <AgentApp onExitAgentMode={() => setAgentModeOpen(false)} />
+      )}
     </div>
   );
 }

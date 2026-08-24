@@ -16,6 +16,7 @@ interface Props {
   onOpenServices: () => void;
   onOpenVirtualCards: () => void;
   onOpenOnboarding?: () => void;
+  onOpenAgent?: () => void;
   onRefresh: () => void;
 }
 
@@ -28,6 +29,7 @@ export default function HomeScreen({
   onOpenServices,
   onOpenVirtualCards,
   onOpenOnboarding,
+  onOpenAgent,
 }: Props) {
   const [hidden, setHidden] = useState(false);
 
@@ -44,7 +46,7 @@ export default function HomeScreen({
   };
 
   return (
-    <div className="pb-28 px-4 pt-6 max-w-md mx-auto">
+    <div className="pb-24 pt-6 px-4 max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div>
@@ -52,12 +54,20 @@ export default function HomeScreen({
           <h1 className="text-xl font-bold text-text-primary tracking-tight">{user.name}</h1>
         </div>
         <div className="flex items-center gap-2">
+          {onOpenAgent && (
+            <button
+              onClick={onOpenAgent}
+              className="px-3 py-1.5 rounded-full bg-[#0A7A4B] text-white text-[11px] font-bold shadow-xs hover:bg-[#08633d] transition flex items-center gap-1"
+            >
+              <span>💼 Agent App</span>
+            </button>
+          )}
           {onOpenOnboarding && (
             <button
               onClick={onOpenOnboarding}
               className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition flex items-center gap-1"
             >
-              <span>🚀 Test Onboarding</span>
+              <span>🚀 Splash</span>
             </button>
           )}
           <img
