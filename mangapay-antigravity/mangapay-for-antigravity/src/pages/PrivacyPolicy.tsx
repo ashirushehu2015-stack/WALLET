@@ -94,9 +94,10 @@ export default function PrivacyPolicy({ onBackToHome, onNavigateToTerms }: Props
             MangaPay (“we”, “us”, or “our”) respects your privacy. This Privacy Policy explains how we collect, use, store, and protect your personal information when you use our mobile application and related services.
           </p>
 
-          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3">
+          {/* 1. Information We Collect */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
             <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold">1</span>
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">1</span>
               Information We Collect
             </h2>
             <ul className="list-disc list-inside space-y-1.5 text-xs font-medium text-gray-700 pl-2">
@@ -112,9 +113,21 @@ export default function PrivacyPolicy({ onBackToHome, onNavigateToTerms }: Props
             </ul>
           </section>
 
-          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3">
+          {/* 2. Sensitive Personal Data */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
             <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold">2</span>
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">2</span>
+              Sensitive Personal Data
+            </h2>
+            <p className="text-xs text-gray-700 font-medium leading-relaxed">
+              We collect sensitive personal data such as your Bank Verification Number (BVN) and National Identification Number (NIN). This data is collected only for identity verification and regulatory compliance purposes, with your explicit consent.
+            </p>
+          </section>
+
+          {/* 3. How We Use Your Information */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
+            <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">3</span>
               How We Use Your Information
             </h2>
             <p className="text-xs text-gray-600 font-medium">We use your information to:</p>
@@ -129,9 +142,21 @@ export default function PrivacyPolicy({ onBackToHome, onNavigateToTerms }: Props
             </ul>
           </section>
 
-          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3">
+          {/* 4. Your Consent */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
             <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold">3</span>
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">4</span>
+              Your Consent
+            </h2>
+            <p className="text-xs text-gray-700 font-medium leading-relaxed">
+              By using MangaPay and providing your BVN or NIN, you give us clear consent to process this information for the purposes stated in this Privacy Policy. You may withdraw your consent at any time by contacting us, subject to legal and regulatory requirements.
+            </p>
+          </section>
+
+          {/* 5. Legal Basis for Processing */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
+            <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">5</span>
               Legal Basis for Processing
             </h2>
             <p className="text-xs text-gray-600 font-medium">We process your data based on:</p>
@@ -143,9 +168,10 @@ export default function PrivacyPolicy({ onBackToHome, onNavigateToTerms }: Props
             </ul>
           </section>
 
-          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3">
+          {/* 6. How We Share Your Information */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
             <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold">4</span>
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">6</span>
               How We Share Your Information
             </h2>
             <p className="text-xs text-gray-600 font-medium">We may share your information with:</p>
@@ -160,46 +186,62 @@ export default function PrivacyPolicy({ onBackToHome, onNavigateToTerms }: Props
             </p>
           </section>
 
-          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3">
+          {/* 7. Data Security */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
             <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold">5</span>
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">7</span>
               Data Security
             </h2>
-            <p className="text-xs text-gray-700 font-medium">
+            <p className="text-xs text-gray-700 font-medium leading-relaxed">
               We use industry-standard security measures including encryption, secure servers, and access controls to protect your information.
             </p>
           </section>
 
-          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3">
+          {/* 8. Data Retention */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
             <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold">6</span>
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">8</span>
               Data Retention
             </h2>
-            <p className="text-xs text-gray-700 font-medium">
-              We keep your information only for as long as necessary to provide our services or as required by Nigerian law (usually a minimum of 5–7 years for financial records).
+            <p className="text-xs text-gray-700 font-medium leading-relaxed">
+              We retain your personal data only for as long as necessary to provide our services and to comply with Nigerian laws (including Central Bank of Nigeria (CBN) and Nigeria Data Protection Act (NDPA) requirements). Financial and identity records are typically retained for a minimum of 5–7 years.
             </p>
           </section>
 
-          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3">
+          {/* 9. Your Rights */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
             <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold">7</span>
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">9</span>
               Your Rights
             </h2>
-            <p className="text-xs text-gray-600 font-medium">You have the right to:</p>
+            <p className="text-xs text-gray-600 font-medium">Under the Nigeria Data Protection Act (NDPA), you have the right to:</p>
             <ul className="list-disc list-inside space-y-1.5 text-xs font-medium text-gray-700 pl-2">
               <li>Access your personal data</li>
               <li>Request correction of inaccurate data</li>
-              <li>Request deletion of your data (subject to legal requirements)</li>
-              <li>Withdraw consent where applicable</li>
+              <li>Request deletion of your data (where legally allowed)</li>
+              <li>Withdraw consent</li>
+              <li>Lodge a complaint with the Nigeria Data Protection Commission (NDPC)</li>
             </ul>
             <p className="text-xs text-gray-700 pt-2 font-medium">
-              To exercise these rights, contact us at: <strong className="text-[#0A7A4B]">support@mangapay.ng</strong>
+              To exercise any of these rights, contact us at: <strong className="text-[#0A7A4B]">support@mangapay.ng</strong>
             </p>
           </section>
 
-          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3">
+          {/* 10. International Data Transfers */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
             <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold">8</span>
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">10</span>
+              International Data Transfers
+            </h2>
+            <p className="text-xs text-gray-700 font-medium leading-relaxed">
+              If we transfer your data outside Nigeria, we will ensure appropriate safeguards are in place to protect your information in line with applicable data protection laws.
+            </p>
+          </section>
+
+          {/* 11. Children’s Privacy */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
+            <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">11</span>
               Children’s Privacy
             </h2>
             <p className="text-xs text-gray-700 font-medium">
@@ -207,9 +249,10 @@ export default function PrivacyPolicy({ onBackToHome, onNavigateToTerms }: Props
             </p>
           </section>
 
-          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3">
+          {/* 12. Changes to This Policy */}
+          <section className="bg-gray-50 rounded-2xl p-6 border border-gray-100 space-y-3 shadow-xs">
             <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
-              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold">9</span>
+              <span className="w-6 h-6 rounded-full bg-[#0A7A4B] text-white text-xs flex items-center justify-center font-bold shrink-0">12</span>
               Changes to This Policy
             </h2>
             <p className="text-xs text-gray-700 font-medium">
@@ -217,13 +260,14 @@ export default function PrivacyPolicy({ onBackToHome, onNavigateToTerms }: Props
             </p>
           </section>
 
-          <section className="bg-emerald-50 rounded-2xl p-6 border border-emerald-200 space-y-2 text-center">
-            <h2 className="text-base font-extrabold text-[#0A7A4B]">10. Contact Us</h2>
+          {/* 13. Contact for Privacy Matters */}
+          <section className="bg-emerald-50 rounded-2xl p-6 border border-emerald-200 space-y-2 text-center shadow-xs">
+            <h2 className="text-base font-extrabold text-[#0A7A4B]">13. Contact for Privacy Matters</h2>
             <p className="text-xs text-gray-700 font-medium">
-              If you have any questions about this Privacy Policy, please contact us at:
+              For any privacy-related questions or requests, please email:
             </p>
             <p className="text-sm font-extrabold text-[#0A7A4B] hover:underline">
-              Email: support@mangapay.ng
+              support@mangapay.ng
             </p>
           </section>
         </div>
