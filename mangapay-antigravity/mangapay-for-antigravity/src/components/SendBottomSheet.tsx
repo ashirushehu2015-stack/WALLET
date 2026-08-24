@@ -29,6 +29,7 @@ export default function SendBottomSheet({
   const [selectedBank, setSelectedBank] = useState<BankInfo>(NIGERIAN_BANKS[0]);
   const [accountNumber, setAccountNumber] = useState("");
   const [bankSearch, setBankSearch] = useState("");
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
   const [loading, setLoading] = useState(false);
@@ -184,85 +185,100 @@ export default function SendBottomSheet({
                     <label className="block text-xs font-medium text-text-secondary">
                       Select {destType === "bank" ? "Commercial Bank" : "MMO / Fintech Operator"}
                     </label>
-                    {selectedBank && (
-                      <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md border border-emerald-200">
-                        Code: {selectedBank.code}
-                      </span>
-                    )}
                   </div>
 
-                  {/* Search Input Box */}
-                  <div className="relative mb-2">
-                    <div className="flex items-center h-12 rounded-xl bg-elevated border border-border px-3.5 focus-within:border-emerald-600 focus-within:bg-surface transition">
-                      <Building2 size={16} className="text-emerald-600 mr-2.5 shrink-0" />
-                      <input
-                        type="text"
-                        value={bankSearch}
-                        onChange={(e) => setBankSearch(e.target.value)}
-                        placeholder={
-                          destType === "bank"
-                            ? "Search GTBank, Zenith, FCMB, Access..."
-                            : "Search OPay, PalmPay, Moniepoint, Kuda..."
-                        }
-                        className="w-full bg-transparent text-xs font-semibold outline-none text-text-primary placeholder:text-text-secondary"
-                      />
-                      {bankSearch ? (
-                        <button
-                          type="button"
-                          onClick={() => setBankSearch("")}
-                          className="p-1 text-text-secondary hover:text-text-primary shrink-0"
-                        >
-                          <X size={14} />
-                        </button>
-                      ) : (
-                        <Search className="text-text-secondary shrink-0" size={15} />
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Clean Full-Width Single-Column Bank Selection List */}
-                  <div className="max-h-44 overflow-y-auto space-y-1.5 p-1.5 rounded-xl border border-border bg-surface shadow-xs no-scrollbar">
-                    {filteredActiveBanks.length > 0 ? (
-                      filteredActiveBanks.map((b) => {
-                        const isSelected = selectedBank.name === b.name;
-                        return (
-                          <button
-                            key={b.name}
-                            type="button"
-                            onClick={() => {
-                              setSelectedBank(b);
-                              setBankSearch(b.name);
-                            }}
-                            className={`w-full flex items-center justify-between p-2.5 rounded-xl border text-left text-xs font-semibold transition ${
-                              isSelected
-                                ? "border-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 shadow-xs"
-                                : "border-transparent bg-elevated/40 text-text-primary hover:bg-elevated hover:border-border"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2.5 overflow-hidden pr-2">
-                              <div
-                                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 text-xs font-extrabold ${
-                                  isSelected
-                                    ? "bg-emerald-600 text-white"
-                                    : "bg-elevated text-emerald-700 dark:text-emerald-400 border border-border"
-                                }`}
-                              >
-                                {b.name.charAt(0)}
-                              </div>
-                              <span className="truncate text-xs font-bold">{b.name}</span>
-                            </div>
-                            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-surface border border-border shrink-0 text-text-secondary">
-                              {b.code}
-                            </span>
-                          </button>
-                        );
-                      })
-                    ) : (
-                      <div className="p-3 text-center text-xs font-medium text-text-secondary">
-                        No bank matching "{bankSearch}"
+                  {/* Selected Bank Card (When Dropdown Closed) OR Search Input Box (When Dropdown Open) */}
+                  {!isDropdownOpen && selectedBank ? (
+                    <div className="flex items-center justify-between h-13 rounded-2xl bg-surface border-2 border-emerald-600/70 px-3.5 shadow-xs transition">
+                      <div className="flex items-center gap-3 overflow-hidden pr-2">
+                        <div className="w-8 h-8 rounded-xl bg-[#0A7A4B] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-xs">
+                          {selectedBank.name.charAt(0)}
+                        </div>
+                        <div className="overflow-hidden">
+                          <p className="text-xs font-black text-text-primary truncate">
+                            {selectedBank.name}
+                          </p>
+                          <span className="text-[10px] font-bold text-emerald-600 font-mono">
+                            Code: {selectedBank.code}
+                          </span>
+                        </div>
                       </div>
-                    )}
-                  </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsDropdownOpen(true);
+                          setBankSearch("");
+                        }}
+                        className="px-3 py-1.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-[#0A7A4B] text-xs font-extrabold border border-emerald-200 hover:bg-emerald-100 transition shrink-0"
+                      >
+                        Change
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <div className="flex items-center h-12 rounded-xl bg-elevated border-2 border-emerald-600 px-3.5 bg-surface transition">
+                        <Building2 size={16} className="text-emerald-600 mr-2.5 shrink-0" />
+                        <input
+                          type="text"
+                          autoFocus
+                          value={bankSearch}
+                          onChange={(e) => setBankSearch(e.target.value)}
+                          placeholder={
+                            destType === "bank"
+                              ? "Type to search bank (GTBank, Zenith, FCMB...)"
+                              : "Type to search operator (OPay, PalmPay, Kuda...)"
+                          }
+                          className="w-full bg-transparent text-xs font-semibold outline-none text-text-primary placeholder:text-text-secondary"
+                        />
+                        {bankSearch ? (
+                          <button
+                            type="button"
+                            onClick={() => setBankSearch("")}
+                            className="p-1 text-text-secondary hover:text-text-primary shrink-0"
+                          >
+                            <X size={14} />
+                          </button>
+                        ) : (
+                          <Search className="text-text-secondary shrink-0" size={15} />
+                        )}
+                      </div>
+
+                      {/* Dropdown list when searching */}
+                      <div className="max-h-48 overflow-y-auto space-y-1 p-1.5 rounded-xl border border-border bg-surface shadow-md no-scrollbar">
+                        {filteredActiveBanks.length > 0 ? (
+                          filteredActiveBanks.map((b) => (
+                            <button
+                              key={b.name}
+                              type="button"
+                              onClick={() => {
+                                setSelectedBank(b);
+                                setBankSearch(b.name);
+                                setIsDropdownOpen(false);
+                              }}
+                              className="w-full flex items-center justify-between p-2.5 rounded-xl border border-transparent hover:border-border hover:bg-elevated text-left text-xs font-semibold transition group"
+                            >
+                              <div className="flex items-center gap-2.5 overflow-hidden pr-2">
+                                <div className="w-7 h-7 rounded-lg bg-elevated group-hover:bg-emerald-600 group-hover:text-white text-emerald-700 dark:text-emerald-400 flex items-center justify-center shrink-0 text-xs font-black border border-border transition">
+                                  {b.name.charAt(0)}
+                                </div>
+                                <span className="truncate text-xs font-bold text-text-primary">
+                                  {b.name}
+                                </span>
+                              </div>
+                              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-elevated border border-border shrink-0 text-text-secondary">
+                                {b.code}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-3 text-center text-xs font-medium text-text-secondary">
+                            No bank matching "{bankSearch}"
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div>
