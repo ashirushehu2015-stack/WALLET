@@ -22,16 +22,53 @@ import {
 type AgentScreen = "welcome" | "login" | "register" | "dashboard";
 type AgentTab = "home" | "customers" | "wallet" | "profile";
 
+export interface AgentData {
+  fullName: string;
+  firstName: string;
+  phone: string;
+  email: string;
+  agentId: string;
+  todayEarnings: number;
+  earningsGrowth: number;
+  profileImage: string;
+}
+
+const DEFAULT_AGENTS: Record<string, AgentData> = {
+  chinedu: {
+    fullName: "Chinedu Okonkwo",
+    firstName: "Chinedu",
+    phone: "+234 803 123 4567",
+    email: "chinedu@mangapayagent.ng",
+    agentId: "AG-449120",
+    todayEarnings: 24750.0,
+    earningsGrowth: 18.5,
+    profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
+  },
+  ashiru: {
+    fullName: "Ashiru Shehu",
+    firstName: "Ashiru",
+    phone: "+234 802 998 8776",
+    email: "ashiru@mangapayagent.ng",
+    agentId: "AG-884920",
+    todayEarnings: 38200.0,
+    earningsGrowth: 24.2,
+    profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
+  },
+};
+
 export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => void }) {
   const [screen, setScreen] = useState<AgentScreen>("welcome");
   const [activeTab, setActiveTab] = useState<AgentTab>("home");
+
+  // Dynamic Auth Context State
+  const [agent, setAgent] = useState<AgentData>(DEFAULT_AGENTS.chinedu);
 
   // Form states
   const [loginPhone, setLoginPhone] = useState("8031234567");
   const [loginPassword, setLoginPassword] = useState("••••••••");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
-  const [fullName, setFullName] = useState("Chinedu Okonkwo");
+  const [fullName, setFullName] = useState("");
   const [regPhone, setRegPhone] = useState("");
   const [regEmail, setRegEmail] = useState("");
   const [regPassword, setRegPassword] = useState("");
@@ -44,6 +81,7 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
   const [verifyIdOpen, setVerifyIdOpen] = useState(false);
   const [collectPaymentOpen, setCollectPaymentOpen] = useState(false);
   const [transactionsOpen, setTransactionsOpen] = useState(false);
+  const [profileModalOpen, setProfileModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Modals Form Data
@@ -57,6 +95,55 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
+  };
+
+  // Auth Handlers
+  const handlePerformLogin = () => {
+    const p = loginPhone.toLowerCase();
+    let selectedAgent: AgentData;
+
+    if (p.includes("ashiru") || p.includes("802")) {
+      selectedAgent = DEFAULT_AGENTS.ashiru;
+    } else if (p.includes("chinedu") || p.includes("803")) {
+      selectedAgent = DEFAULT_AGENTS.chinedu;
+    } else {
+      const derivedName = p.length > 3 ? `Agent ${p.slice(-4)}` : "Ashiru Shehu";
+      const fName = derivedName.split(" ")[0];
+      selectedAgent = {
+        fullName: derivedName,
+        firstName: fName,
+        phone: loginPhone.startsWith("+") ? loginPhone : `+234 ${loginPhone}`,
+        email: `${fName.toLowerCase()}@mangapayagent.ng`,
+        agentId: `AG-${Math.floor(100000 + Math.random() * 900000)}`,
+        todayEarnings: 15400.0,
+        earningsGrowth: 12.0,
+        profileImage: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&q=80&w=200",
+      };
+    }
+
+    setAgent(selectedAgent);
+    setScreen("dashboard");
+    triggerToast(`Welcome back, ${selectedAgent.firstName}!`);
+  };
+
+  const handlePerformRegister = () => {
+    const rawName = fullName.trim() || "Ashiru Shehu";
+    const fName = rawName.split(" ")[0];
+
+    const newAgent: AgentData = {
+      fullName: rawName,
+      firstName: fName,
+      phone: regPhone.startsWith("+") ? regPhone : `+234 ${regPhone || "803 123 4567"}`,
+      email: regEmail || `${fName.toLowerCase()}@mangapayagent.ng`,
+      agentId: `AG-${Math.floor(100000 + Math.random() * 900000)}`,
+      todayEarnings: 5000.0, // Welcome signup bonus
+      earningsGrowth: 100.0,
+      profileImage: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200",
+    };
+
+    setAgent(newAgent);
+    setScreen("dashboard");
+    triggerToast(`Agent Account Created! Welcome, ${fName}!`);
   };
 
   return (
@@ -198,10 +285,7 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
             <div className="space-y-4 pt-6">
               {/* Primary Green Button: Login */}
               <button
-                onClick={() => {
-                  setScreen("dashboard");
-                  triggerToast("Welcome back, Agent Ashiru!");
-                }}
+                onClick={handlePerformLogin}
                 className="w-full h-14 rounded-2xl bg-[#0A7A4B] hover:bg-[#08633d] text-white font-extrabold text-sm shadow-lg transition active:scale-95"
               >
                 Login
@@ -336,10 +420,7 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
 
             <div className="space-y-3 pt-4">
               <button
-                onClick={() => {
-                  setScreen("dashboard");
-                  triggerToast("Agent Account Created Successfully!");
-                }}
+                onClick={handlePerformRegister}
                 disabled={!agreeTerms}
                 className="w-full h-14 rounded-2xl bg-[#0A7A4B] hover:bg-[#08633d] text-white font-extrabold text-sm shadow-lg transition disabled:opacity-40"
               >
@@ -380,7 +461,7 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
 
               <div className="flex items-center gap-2">
                 <div className="text-right">
-                  <p className="text-xs font-extrabold text-[#1A1A1A]">Agent {fullName.split(" ")[0] || "Ashiru"}</p>
+                  <p className="text-xs font-extrabold text-[#1A1A1A]">Agent {agent.firstName}</p>
                   <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                     Online
@@ -388,8 +469,8 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
                 </div>
                 <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-[#0A7A4B] to-emerald-400 p-0.5 shadow-sm">
                   <img
-                    src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=200"
-                    alt="Agent Avatar"
+                    src={agent.profileImage}
+                    alt={agent.fullName}
                     className="w-full h-full rounded-full object-cover"
                   />
                 </div>
@@ -402,7 +483,7 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
               <div className="flex items-center justify-between bg-white p-4 rounded-2xl border border-gray-100 shadow-xs">
                 <div>
                   <h2 className="text-lg font-black text-[#1A1A1A]">
-                    Good afternoon, {fullName.split(" ")[0] || "Ashiru"}
+                    Good afternoon, {agent.firstName}
                   </h2>
                   <p className="text-xs text-gray-500 font-medium mt-0.5">
                     Here's what's happening with your business today.
@@ -426,10 +507,10 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
 
                 <div className="my-2">
                   <h1 className="text-3xl font-black text-[#F5C518] tracking-tight">
-                    ₦24,750.00
+                    ₦{agent.todayEarnings.toLocaleString("en-NG", { minimumFractionDigits: 2 })}
                   </h1>
                   <p className="text-xs font-bold text-emerald-200 mt-1 flex items-center gap-1">
-                    <span className="text-emerald-300 font-extrabold">↑ +18.5%</span> vs yesterday
+                    <span className="text-emerald-300 font-extrabold">↑ +{agent.earningsGrowth}%</span> vs yesterday
                   </p>
                 </div>
 
@@ -552,7 +633,7 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
               <button
                 onClick={() => {
                   setActiveTab("profile");
-                  triggerToast("Agent Profile & Commission Account #882200114");
+                  setProfileModalOpen(true);
                 }}
                 className={`flex flex-col items-center gap-1 ${
                   activeTab === "profile" ? "text-[#0A7A4B]" : "text-gray-400"
@@ -766,6 +847,63 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ========================================================= */}
+        {/* MODAL 5: Dynamic Agent Profile & Logout Modal */}
+        {/* ========================================================= */}
+        {profileModalOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+            <div className="bg-white text-gray-900 w-full max-w-sm rounded-[24px] p-6 shadow-2xl border border-gray-100 flex flex-col items-center text-center">
+              <div className="w-full flex items-center justify-between mb-2">
+                <h3 className="text-base font-extrabold">Agent Profile</h3>
+                <button onClick={() => setProfileModalOpen(false)} className="p-1 rounded-full hover:bg-gray-100">
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#0A7A4B] to-emerald-400 p-1 shadow-md my-3">
+                <img
+                  src={agent.profileImage}
+                  alt={agent.fullName}
+                  className="w-full h-full rounded-full object-cover"
+                />
+              </div>
+
+              <h3 className="text-lg font-black text-[#1A1A1A]">{agent.fullName}</h3>
+              <span className="text-xs font-bold text-[#0A7A4B] bg-emerald-50 border border-emerald-200 px-3 py-0.5 rounded-full mt-1">
+                ID: {agent.agentId}
+              </span>
+
+              <div className="w-full bg-gray-50 rounded-2xl p-4 my-4 space-y-2 text-left text-xs font-medium text-gray-700 border border-gray-100">
+                <div className="flex justify-between py-1 border-b border-gray-200/60">
+                  <span className="text-gray-500 font-bold">Phone:</span>
+                  <span className="font-extrabold text-gray-900">{agent.phone}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-gray-200/60">
+                  <span className="text-gray-500 font-bold">Email:</span>
+                  <span className="font-extrabold text-gray-900">{agent.email}</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-gray-500 font-bold">Today's Earnings:</span>
+                  <span className="font-extrabold text-[#0A7A4B]">
+                    ₦{agent.todayEarnings.toLocaleString("en-NG", { minimumFractionDigits: 2 })}
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => {
+                  setProfileModalOpen(false);
+                  setScreen("login");
+                  triggerToast("Logged out of agent account.");
+                }}
+                className="w-full h-12 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 text-red-600 font-bold text-xs transition"
+              >
+                Log Out / Switch Agent Account
+              </button>
             </div>
           </div>
         )}
