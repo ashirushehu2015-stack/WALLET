@@ -17,6 +17,7 @@ interface Props {
   onOpenVirtualCards: () => void;
   onOpenOnboarding?: () => void;
   onOpenAgent?: () => void;
+  onInstallApp?: () => void;
   onRefresh: () => void;
 }
 
@@ -30,6 +31,7 @@ export default function HomeScreen({
   onOpenVirtualCards,
   onOpenOnboarding,
   onOpenAgent,
+  onInstallApp,
 }: Props) {
   const [hidden, setHidden] = useState(false);
 
@@ -61,6 +63,14 @@ export default function HomeScreen({
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {onInstallApp && (
+            <button
+              onClick={onInstallApp}
+              className="px-2.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#0A7A4B] text-[11px] font-extrabold shadow-xs hover:bg-emerald-100 transition flex items-center gap-1"
+            >
+              <span>📲 Install App</span>
+            </button>
+          )}
           {onOpenAgent && (
             <button
               onClick={onOpenAgent}

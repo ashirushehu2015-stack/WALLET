@@ -64,6 +64,28 @@ export default function App() {
   const [virtualCardsOpen, setVirtualCardsOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState<boolean>(true);
   const [agentModeOpen, setAgentModeOpen] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstall = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+    return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const choice = await installPrompt.userChoice;
+      if (choice.outcome === "accepted") {
+        setInstallPrompt(null);
+      }
+    } else {
+      alert("To install MangaPay on your phone:\n\n• Android (Chrome): Tap the 3 dots menu at top right -> select 'Install app' or 'Add to Home screen'.\n\n• iPhone (Safari): Tap the Share button at bottom -> select 'Add to Home Screen'.");
+    }
+  };
 
   // Paystack Modal State
   const [paystackOpen, setPaystackOpen] = useState(false);
@@ -315,6 +337,7 @@ export default function App() {
           onOpenVirtualCards={() => setVirtualCardsOpen(true)}
           onOpenOnboarding={() => setOnboardingOpen(true)}
           onOpenAgent={() => setAgentModeOpen(true)}
+          onInstallApp={handleInstallApp}
           onRefresh={refresh}
         />
       )}
