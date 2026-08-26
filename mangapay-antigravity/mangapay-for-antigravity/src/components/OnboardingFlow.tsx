@@ -12,6 +12,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import BiometricAuthModal from "./BiometricAuthModal";
 
 interface Props {
   open: boolean;
@@ -147,12 +148,15 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
     onClose();
   };
 
-  const handleBiometricLogin = async () => {
-    setLoginLoading(true);
-    setLoginError("");
-    await new Promise((r) => setTimeout(r, 700));
-    setLoginLoading(false);
+  const [biometricAuthOpen, setBiometricAuthOpen] = useState(false);
 
+  const handleBiometricLogin = () => {
+    setLoginError("");
+    setBiometricAuthOpen(true);
+  };
+
+  const handleBiometricSuccess = () => {
+    setBiometricAuthOpen(false);
     localStorage.setItem("mangapay_token", "token_alex_okoye_biometrics");
     localStorage.setItem("mangapay_onboarded", "true");
     onCompleteOnboarding({
@@ -233,7 +237,7 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {/* Primary green button */}
                 <button
                   onClick={() => setStep(2)}
@@ -241,6 +245,16 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
                 >
                   <span>Get Started</span>
                   <ArrowRight size={18} />
+                </button>
+
+                {/* Quick Biometric Login */}
+                <button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  className="w-full h-12 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs hover:bg-emerald-500/20 transition flex items-center justify-center gap-2"
+                >
+                  <Fingerprint size={18} className="text-emerald-600" />
+                  <span>Quick Biometric Login (Touch ID / PIN)</span>
                 </button>
 
                 {/* Secondary light button */}
@@ -746,6 +760,14 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
           )}
         </div>
       </div>
+
+      <BiometricAuthModal
+        open={biometricAuthOpen}
+        onClose={() => setBiometricAuthOpen(false)}
+        onSuccess={handleBiometricSuccess}
+        title="Quick Biometric Authentication"
+        subtitle="Scan your fingerprint sensor or enter PIN to log in to MangaPay"
+      />
     </div>
   );
 }
