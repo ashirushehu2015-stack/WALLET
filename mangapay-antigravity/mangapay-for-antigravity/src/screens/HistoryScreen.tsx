@@ -56,7 +56,7 @@ export default function HistoryScreen({ transactions }: Props) {
   };
 
   return (
-    <div className="pb-28 px-4 pt-6 max-w-md mx-auto">
+    <div className="pb-28 px-4 pt-6 max-w-lg mx-auto">
       <h1 className="text-xl font-bold mb-4">Transaction History</h1>
 
       {/* Search */}
@@ -73,8 +73,8 @@ export default function HistoryScreen({ transactions }: Props) {
         />
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar mb-5 pb-1">
+      {/* Filters - Responsive Wrap so all options appear in full */}
+      <div className="flex flex-wrap gap-2 mb-5">
         {(
           [
             ["ALL", "All Activity"],
@@ -91,9 +91,9 @@ export default function HistoryScreen({ transactions }: Props) {
               setFilter(id);
               setVisibleCount(8);
             }}
-            className={`shrink-0 px-4 py-2 rounded-full text-xs font-semibold border transition ${
+            className={`px-3.5 py-2 rounded-full text-xs font-semibold border transition ${
               filter === id
-                ? "bg-accent text-white border-accent shadow-sm"
+                ? "bg-accent text-white border-accent shadow-xs"
                 : "bg-elevated border-border text-text-primary hover:border-accent"
             }`}
           >
