@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { X } from "lucide-react";
 import BottomTabs from "./components/BottomTabs";
 import HomeScreen from "./screens/HomeScreen";
 import HistoryScreen from "./screens/HistoryScreen";
@@ -65,11 +66,17 @@ export default function App() {
   const [onboardingOpen, setOnboardingOpen] = useState<boolean>(true);
   const [agentModeOpen, setAgentModeOpen] = useState(false);
   const [installPrompt, setInstallPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState<boolean>(() => {
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches || (navigator as any).standalone;
+    return !isStandalone;
+  });
+  const [installGuideOpen, setInstallGuideOpen] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstall = (e: Event) => {
       e.preventDefault();
       setInstallPrompt(e);
+      setShowInstallBanner(true);
     };
     window.addEventListener("beforeinstallprompt", handleBeforeInstall);
     return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
@@ -81,9 +88,10 @@ export default function App() {
       const choice = await installPrompt.userChoice;
       if (choice.outcome === "accepted") {
         setInstallPrompt(null);
+        setShowInstallBanner(false);
       }
     } else {
-      alert("To install MangaPay on your phone:\n\n• Android (Chrome): Tap the 3 dots menu at top right -> select 'Install app' or 'Add to Home screen'.\n\n• iPhone (Safari): Tap the Share button at bottom -> select 'Add to Home Screen'.");
+      setInstallGuideOpen(true);
     }
   };
 
@@ -455,6 +463,73 @@ export default function App() {
 
       {agentModeOpen && (
         <AgentApp onExitAgentMode={() => setAgentModeOpen(false)} />
+      )}
+
+      {/* Floating PWA Install Banner on Mobile Browsers */}
+      {showInstallBanner && !agentModeOpen && !onboardingOpen && (
+        <div className="fixed top-3 left-4 right-4 z-50 bg-[#0A7A4B] text-white p-3 rounded-2xl shadow-2xl border border-white/20 flex items-center justify-between animate-bounce max-w-lg mx-auto">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <img src="/app_logo_interchanged.jpg" alt="Logo" className="w-9 h-9 rounded-xl object-cover border border-white/30 shrink-0" />
+            <div className="overflow-hidden">
+              <p className="text-xs font-black leading-tight truncate">Install MangaPay App</p>
+              <p className="text-[10px] text-emerald-100 font-medium truncate">Add to phone home screen</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              onClick={handleInstallApp}
+              className="px-3.5 py-1.5 rounded-xl bg-[#F5C518] hover:bg-amber-400 text-[#1A1A1A] text-xs font-black shadow-md transition"
+            >
+              Install
+            </button>
+            <button
+              onClick={() => setShowInstallBanner(false)}
+              className="p-1 text-emerald-200 hover:text-white"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Installation Guide Modal for Chrome/Safari */}
+      {installGuideOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
+          <div className="bg-surface text-text-primary w-full max-w-sm rounded-[24px] p-6 shadow-2xl border border-border text-center">
+            <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-[#0A7A4B] flex items-center justify-center mx-auto mb-3 border border-emerald-100 shadow-xs">
+              <img src="/app_logo_interchanged.jpg" alt="Logo" className="w-full h-full rounded-2xl object-cover" />
+            </div>
+            <h3 className="text-base font-black mb-1">Install MangaPay on Phone</h3>
+            <p className="text-xs text-text-secondary mb-4">
+              Follow these simple steps to add MangaPay to your phone screen:
+            </p>
+
+            <div className="bg-elevated rounded-2xl p-4 space-y-3 text-left text-xs font-medium border border-border mb-5">
+              <div className="space-y-1">
+                <p className="font-bold text-emerald-600">📱 Android (Chrome):</p>
+                <ol className="list-decimal list-inside text-[11px] space-y-1 text-text-secondary">
+                  <li>Tap Chrome’s <strong>3 dots menu (⋮)</strong> at top right.</li>
+                  <li>Select <strong>"Install app"</strong> or <strong>"Add to Home screen"</strong>.</li>
+                </ol>
+              </div>
+
+              <div className="space-y-1 pt-2 border-t border-border/50">
+                <p className="font-bold text-emerald-600">🍎 iPhone (Safari):</p>
+                <ol className="list-decimal list-inside text-[11px] space-y-1 text-text-secondary">
+                  <li>Tap Safari’s <strong>Share button (⎋)</strong> at bottom.</li>
+                  <li>Scroll down and select <strong>"Add to Home Screen"</strong>.</li>
+                </ol>
+              </div>
+            </div>
+
+            <button
+              onClick={() => setInstallGuideOpen(false)}
+              className="w-full h-12 rounded-xl bg-accent text-white font-bold text-xs shadow-md"
+            >
+              Got It
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );
