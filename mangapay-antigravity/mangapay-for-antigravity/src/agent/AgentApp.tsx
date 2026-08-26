@@ -180,7 +180,7 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
             <div className="flex-1 flex flex-col items-center justify-center">
               {/* Centered Large White M logo inside a rounded square */}
               <div className="w-24 h-24 rounded-[28px] overflow-hidden shadow-2xl mb-8 border-4 border-white/20">
-                <img src="/app_logo_interchanged_alt.jpg" alt="Mangapay Agent Logo" className="w-full h-full object-cover" />
+                <img src="/app_logo_interchanged.jpg" alt="Mangapay Agent Logo" className="w-full h-full object-cover" />
               </div>
 
               <h1 className="text-4xl font-extrabold tracking-tight">
@@ -226,9 +226,11 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
             <div>
               {/* Top Mangapay Agent Logo */}
               <div className="flex items-center gap-3 mb-8 pt-2">
-                <div className="w-11 h-11 rounded-xl bg-[#0A7A4B] flex items-center justify-center shadow-md">
-                  <span className="text-2xl font-black text-white">M</span>
-                </div>
+                <img
+                  src="/app_logo_interchanged.jpg"
+                  alt="MangaPay Agent Logo"
+                  className="w-11 h-11 rounded-xl object-cover shadow-md border border-emerald-500/20"
+                />
                 <div>
                   <h2 className="text-lg font-black text-[#0A7A4B] leading-tight">Mangapay</h2>
                   <span className="text-xs font-bold text-[#F5C518] uppercase tracking-wider bg-[#1A1A1A] px-2 py-0.5 rounded">
@@ -469,9 +471,11 @@ export default function AgentApp({ onExitAgentMode }: { onExitAgentMode?: () => 
             {/* Top Header */}
             <div className="bg-white px-5 pt-4 pb-3 border-b border-gray-100 flex items-center justify-between shadow-xs">
               <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-[#0A7A4B] flex items-center justify-center shadow-xs">
-                  <span className="text-xl font-black text-white">M</span>
-                </div>
+                <img
+                  src="/app_logo_interchanged.jpg"
+                  alt="MangaPay Agent Logo"
+                  className="w-9 h-9 rounded-xl object-cover shadow-xs border border-emerald-500/20"
+                />
                 <div>
                   <h3 className="text-sm font-black text-[#0A7A4B] leading-tight">Mangapay</h3>
                   <span className="text-[10px] font-bold text-[#F5C518] bg-[#1A1A1A] px-1.5 py-0.2 rounded uppercase">

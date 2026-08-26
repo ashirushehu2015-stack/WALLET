@@ -49,9 +49,16 @@ export default function HomeScreen({
     <div className="pb-24 pt-6 px-4 max-w-lg mx-auto">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <div>
-          <p className="text-xs text-text-secondary font-medium">{greeting},</p>
-          <h1 className="text-xl font-bold text-text-primary tracking-tight">{user.name}</h1>
+        <div className="flex items-center gap-3">
+          <img
+            src="/app_logo_interchanged.jpg"
+            alt="MangaPay Logo"
+            className="w-10 h-10 rounded-2xl object-cover shadow-xs border border-emerald-500/20"
+          />
+          <div>
+            <p className="text-xs text-text-secondary font-medium">{greeting},</p>
+            <h1 className="text-xl font-bold text-text-primary tracking-tight">{user.name}</h1>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {onOpenAgent && (
