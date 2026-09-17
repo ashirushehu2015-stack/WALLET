@@ -52,6 +52,7 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
   const [idNumber, setIdNumber] = useState("");
   const [kycVerified, setKycVerified] = useState(false);
   const [isTier1Skipped, setIsTier1Skipped] = useState(false);
+  const [biometricAuthOpen, setBiometricAuthOpen] = useState(false);
 
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -147,8 +148,6 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
     });
     onClose();
   };
-
-  const [biometricAuthOpen, setBiometricAuthOpen] = useState(false);
 
   const handleBiometricLogin = () => {
     setLoginError("");

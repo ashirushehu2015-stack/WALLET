@@ -261,7 +261,7 @@ const user: User = {
 
 const delay = (ms = 600) => new Promise((r) => setTimeout(r, ms));
 
-const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || "https://wallet-ijx3.onrender.com/api";
+const API_BASE_URL = (import.meta as any).env?.VITE_API_BASE_URL || "https://wallet-ijx3.onrender.com/api/v1";
 
 function getAuthHeader(): Record<string, string> {
   const token = localStorage.getItem("mangapay_token") || localStorage.getItem("token");
