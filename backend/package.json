@@ -6,7 +6,7 @@
   "scripts": {
     "build": "npx --yes prisma@5.10.0 generate && npx --yes tsc",
     "render-build": "npx --yes prisma@5.10.0 generate && npx --yes tsc",
-    "start": "node dist/server.js",
+    "start": "node prisma/seed.js && node dist/server.js",
     "dev": "ts-node-dev --respawn --transpile-only src/server.ts",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
