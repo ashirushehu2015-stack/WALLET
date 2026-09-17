@@ -231,7 +231,7 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
                 {/* Soft pill badge */}
                 <div className="mt-8 px-4 py-2 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center gap-2 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
                   <ShieldCheck size={14} className="text-emerald-600 shrink-0" />
-                  <span>CBN Licensed Fintech</span>
+                  <span>Indigenous wallet</span>
                 </div>
               </div>
 
