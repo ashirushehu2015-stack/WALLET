@@ -250,16 +250,16 @@ export default function OnboardingFlow({ open, onClose, onCompleteOnboarding }: 
                 <button
                   type="button"
                   onClick={handleBiometricLogin}
-                  className="w-full h-12 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-bold text-xs hover:bg-emerald-500/20 transition flex items-center justify-center gap-2"
+                  className="w-full h-10 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300 font-semibold text-xs hover:bg-emerald-500/20 transition flex items-center justify-center gap-2"
                 >
-                  <Fingerprint size={18} className="text-emerald-600" />
+                  <Fingerprint size={16} className="text-emerald-600" />
                   <span>Quick Biometric Login (Touch ID / PIN)</span>
                 </button>
 
                 {/* Secondary light button */}
                 <button
                   onClick={() => setStep(8)}
-                  className="w-full h-12 rounded-2xl border border-border bg-elevated hover:bg-surface text-text-primary font-semibold text-xs transition"
+                  className="w-full h-10 rounded-xl border border-border bg-elevated hover:bg-surface text-text-primary font-medium text-xs transition flex items-center justify-center"
                 >
                   Already have an account? Log in
                 </button>
