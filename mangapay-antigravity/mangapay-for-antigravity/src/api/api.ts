@@ -1,5 +1,5 @@
 export type TxStatus = "SUCCESS" | "PROCESSING" | "FAILED";
-export type TxType = "FUND" | "SEND" | "WITHDRAW" | "UTILITY" | "CARD_FUND" | "CARD_CREATE";
+export type TxType = "FUND" | "SEND" | "WITHDRAW" | "UTILITY" | "VAS_AIRTIME" | "VAS_DATA" | "CARD_FUND" | "CARD_CREATE";
 
 export interface Transaction {
   id: string;
@@ -622,3 +622,169 @@ export function formatRelative(iso: string) {
   return `${days}d ago`;
 }
 
+
+
+// --- VALUE-ADDED SERVICES (VAS) API CLIENT ---
+
+export interface VASNetwork {
+  id: string;
+  name: string;
+  airtimeServiceId: string;
+  dataServiceId: string;
+  brandColor: string;
+  minAirtime: number;
+  maxAirtime: number;
+  isActive: boolean;
+}
+
+export interface VASDataPlan {
+  productId?: string;
+  network: string;
+  serviceId: string;
+  variationCode: string;
+  name: string;
+  description?: string;
+  dataAllowance?: string;
+  validity?: string;
+  providerCost: number;
+  sellingPrice: number;
+  isActive: boolean;
+}
+
+export interface VASTxReceipt {
+  receiptNumber: string;
+  transactionReference: string;
+  providerReference?: string;
+  date: string;
+  customerName: string;
+  customerPhone: string;
+  serviceType: string;
+  network: string;
+  recipientPhone: string;
+  amount: number;
+  fee: number;
+  totalAmountPaid: number;
+  status: string;
+}
+
+export async function getVASNetworks(): Promise<VASNetwork[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/vas/networks`, {
+      headers: getAuthHeader(),
+    });
+    if (res.ok) {
+      const body = await res.json();
+      if (body.success && Array.isArray(body.data)) {
+        return body.data;
+      }
+    }
+  } catch (e) {
+    // fallback
+  }
+
+  return [
+    { id: "MTN", name: "MTN Nigeria", airtimeServiceId: "mtn", dataServiceId: "mtn-data", brandColor: "#FFCC00", minAirtime: 50, maxAirtime: 50000, isActive: true },
+    { id: "AIRTEL", name: "Airtel Nigeria", airtimeServiceId: "airtel", dataServiceId: "airtel-data", brandColor: "#E60000", minAirtime: 50, maxAirtime: 50000, isActive: true },
+    { id: "GLO", name: "Globacom (Glo)", airtimeServiceId: "glo", dataServiceId: "glo-data", brandColor: "#2EB82E", minAirtime: 50, maxAirtime: 50000, isActive: true },
+    { id: "9MOBILE", name: "9mobile", airtimeServiceId: "etisalat", dataServiceId: "etisalat-data", brandColor: "#005C29", minAirtime: 50, maxAirtime: 50000, isActive: true },
+  ];
+}
+
+export async function getVASDataPlans(network: string): Promise<VASDataPlan[]> {
+  try {
+    const res = await fetch(`${API_BASE_URL}/vas/data/plans/${network}`, {
+      headers: getAuthHeader(),
+    });
+    if (res.ok) {
+      const body = await res.json();
+      if (body.success && Array.isArray(body.data)) {
+        return body.data;
+      }
+    }
+  } catch (e) {
+    // fallback
+  }
+
+  const fallbacks: Record<string, VASDataPlan[]> = {
+    MTN: [
+      { network: "MTN", serviceId: "mtn-data", variationCode: "m1024", name: "MTN 1GB (Monthly)", dataAllowance: "1GB", validity: "30 Days", providerCost: 1000, sellingPrice: 1000, isActive: true },
+      { network: "MTN", serviceId: "mtn-data", variationCode: "m2500", name: "MTN 2.5GB (Monthly)", dataAllowance: "2.5GB", validity: "30 Days", providerCost: 1500, sellingPrice: 1500, isActive: true },
+      { network: "MTN", serviceId: "mtn-data", variationCode: "m5000", name: "MTN 5GB (Monthly)", dataAllowance: "5GB", validity: "30 Days", providerCost: 2500, sellingPrice: 2500, isActive: true },
+      { network: "MTN", serviceId: "mtn-data", variationCode: "m10000", name: "MTN 10GB (Monthly)", dataAllowance: "10GB", validity: "30 Days", providerCost: 4000, sellingPrice: 4000, isActive: true },
+    ],
+    AIRTEL: [
+      { network: "AIRTEL", serviceId: "airtel-data", variationCode: "airt-1000", name: "Airtel 1.5GB (Monthly)", dataAllowance: "1.5GB", validity: "30 Days", providerCost: 1000, sellingPrice: 1000, isActive: true },
+      { network: "AIRTEL", serviceId: "airtel-data", variationCode: "airt-1500", name: "Airtel 3.5GB (Monthly)", dataAllowance: "3.5GB", validity: "30 Days", providerCost: 1500, sellingPrice: 1500, isActive: true },
+      { network: "AIRTEL", serviceId: "airtel-data", variationCode: "airt-3000", name: "Airtel 10GB (Monthly)", dataAllowance: "10GB", validity: "30 Days", providerCost: 3000, sellingPrice: 3000, isActive: true },
+    ],
+    GLO: [
+      { network: "GLO", serviceId: "glo-data", variationCode: "glo1000", name: "Glo 2.5GB (Monthly)", dataAllowance: "2.5GB", validity: "30 Days", providerCost: 1000, sellingPrice: 1000, isActive: true },
+      { network: "GLO", serviceId: "glo-data", variationCode: "glo2000", name: "Glo 5.8GB (Monthly)", dataAllowance: "5.8GB", validity: "30 Days", providerCost: 2000, sellingPrice: 2000, isActive: true },
+      { network: "GLO", serviceId: "glo-data", variationCode: "glo3000", name: "Glo 10GB (Monthly)", dataAllowance: "10GB", validity: "30 Days", providerCost: 3000, sellingPrice: 3000, isActive: true },
+    ],
+    "9MOBILE": [
+      { network: "9MOBILE", serviceId: "etisalat-data", variationCode: "9mob-1000", name: "9mobile 1.5GB (Monthly)", dataAllowance: "1.5GB", validity: "30 Days", providerCost: 1000, sellingPrice: 1000, isActive: true },
+      { network: "9MOBILE", serviceId: "etisalat-data", variationCode: "9mob-2000", name: "9mobile 4.5GB (Monthly)", dataAllowance: "4.5GB", validity: "30 Days", providerCost: 2000, sellingPrice: 2000, isActive: true },
+    ],
+  };
+
+  return fallbacks[network] || fallbacks.MTN;
+}
+
+export async function purchaseAirtime(data: {
+  network: string;
+  recipientPhone: string;
+  amount: number;
+  pin: string;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/vas/airtime/purchase`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-idempotency-key": generateIdempotencyKey(),
+      ...getAuthHeader(),
+    },
+    body: JSON.stringify(data),
+  });
+
+  const body = await res.json();
+  if (!res.ok || !body.success) {
+    throw new Error(body.message || "Airtime purchase failed.");
+  }
+  return body.data;
+}
+
+export async function purchaseData(data: {
+  network: string;
+  recipientPhone: string;
+  variationCode: string;
+  serviceId?: string;
+  pin: string;
+}): Promise<any> {
+  const res = await fetch(`${API_BASE_URL}/vas/data/purchase`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-idempotency-key": generateIdempotencyKey(),
+      ...getAuthHeader(),
+    },
+    body: JSON.stringify(data),
+  });
+
+  const body = await res.json();
+  if (!res.ok || !body.success) {
+    throw new Error(body.message || "Data subscription failed.");
+  }
+  return body.data;
+}
+
+export async function getVASTransactionReceipt(reference: string): Promise<VASTxReceipt> {
+  const res = await fetch(`${API_BASE_URL}/vas/transactions/${reference}`, {
+    headers: getAuthHeader(),
+  });
+  const body = await res.json();
+  if (!res.ok || !body.success) {
+    throw new Error(body.message || "Receipt not found.");
+  }
+  return body.data.receipt;
+}

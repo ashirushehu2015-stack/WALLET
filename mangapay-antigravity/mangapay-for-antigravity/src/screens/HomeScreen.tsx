@@ -6,6 +6,7 @@ import {
   type Transaction,
   type User,
 } from "../api/api";
+import type { ServiceCategory } from "../components/ServicesBottomSheet";
 
 interface Props {
   user: User;
@@ -13,7 +14,7 @@ interface Props {
   onFund: () => void;
   onSend: () => void;
   onWithdraw: () => void;
-  onOpenServices: () => void;
+  onOpenServices: (category?: ServiceCategory) => void;
   onOpenVirtualCards: () => void;
   onOpenOnboarding?: () => void;
   onOpenAgent?: () => void;
@@ -48,65 +49,60 @@ export default function HomeScreen({
   };
 
   return (
-    <div className="pb-24 pt-6 px-4 max-w-lg mx-auto">
+    <div className="pb-24 pt-4">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <img
-            src="/app_logo_interchanged.jpg"
-            alt="MangaPay Logo"
-            className="w-10 h-10 rounded-2xl object-cover shadow-xs border border-emerald-500/20"
-          />
+      <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center font-bold text-sm">
+            {user.name.charAt(0)}
+          </div>
           <div>
-            <p className="text-xs text-text-secondary font-medium">{greeting},</p>
-            <h1 className="text-xl font-bold text-text-primary tracking-tight">{user.name}</h1>
+            <p className="text-xs text-text-secondary">{greeting},</p>
+            <p className="text-sm font-bold text-text-primary">{user.name}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           {onInstallApp && (
             <button
               onClick={onInstallApp}
-              className="px-2.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-[#0A7A4B] text-[11px] font-extrabold shadow-xs hover:bg-emerald-100 transition flex items-center gap-1"
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-accent-soft text-accent border border-accent/20 hover:opacity-80 transition"
             >
-              <span>📲 Install App</span>
+              Get App
             </button>
           )}
           {onOpenAgent && (
             <button
               onClick={onOpenAgent}
-              className="px-3 py-1.5 rounded-full bg-[#0A7A4B] text-white text-[11px] font-bold shadow-xs hover:bg-[#08633d] transition flex items-center gap-1"
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-elevated border border-border text-text-primary hover:border-accent transition"
             >
-              <span>💼 Agent App</span>
+              Agent Mode
             </button>
           )}
           {onOpenOnboarding && (
             <button
               onClick={onOpenOnboarding}
-              className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[11px] font-bold text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/20 transition flex items-center gap-1"
+              className="w-8 h-8 rounded-full bg-elevated border border-border flex items-center justify-center text-xs font-bold text-text-secondary hover:text-text-primary"
+              title="Tour & Guides"
             >
-              <span>🚀 Splash</span>
+              ?
             </button>
           )}
-          <img
-            src={user.avatar}
-            alt=""
-            className="w-11 h-11 rounded-full bg-elevated border border-border shadow-sm object-cover"
-          />
         </div>
       </div>
 
       {/* Balance Card */}
-      <div className="bg-surface rounded-[20px] p-5 shadow-soft border border-border mb-6 relative overflow-hidden">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-xs text-text-secondary font-medium">Available Balance</p>
+      <div className="relative overflow-hidden rounded-[24px] bg-gradient-to-br from-surface to-elevated p-5 mb-5 border border-border shadow-sm">
+        <div className="flex items-center justify-between text-xs text-text-secondary mb-1">
+          <span>Available Wallet Balance</span>
           <button
             onClick={() => setHidden(!hidden)}
-            className="p-1.5 rounded-full hover:bg-elevated text-text-secondary transition"
+            className="p-1 rounded-full hover:bg-surface/50 text-text-secondary"
           >
-            {hidden ? <EyeOff size={18} /> : <Eye size={18} />}
+            {hidden ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
-        <p className="text-3xl font-bold tracking-tight text-text-primary">
+
+        <p className="text-3xl font-extrabold tracking-tight text-text-primary">
           {hidden ? "••••••••" : formatNaira(user.balance)}
         </p>
 
@@ -139,7 +135,7 @@ export default function HomeScreen({
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-sm text-text-primary">Quick Services</h2>
           <button
-            onClick={onOpenServices}
+            onClick={() => onOpenServices()}
             className="text-xs font-semibold text-accent hover:underline flex items-center gap-0.5"
           >
             <span>See All</span>
@@ -149,9 +145,9 @@ export default function HomeScreen({
 
         <div className="grid grid-cols-4 gap-2.5">
           {[
-            { label: "Airtime", icon: Smartphone, action: onOpenServices },
-            { label: "Data", icon: Zap, action: onOpenServices },
-            { label: "Cable TV", icon: Tv, action: onOpenServices },
+            { label: "Airtime", icon: Smartphone, action: () => onOpenServices("Airtime") },
+            { label: "Data", icon: Zap, action: () => onOpenServices("Data") },
+            { label: "Cable TV", icon: Tv, action: () => onOpenServices("Cable") },
             { label: "Virtual Card", icon: CreditCard, action: onOpenVirtualCards },
           ].map(({ label, icon: Icon, action }) => (
             <button
@@ -252,4 +248,3 @@ export default function HomeScreen({
     </div>
   );
 }
-

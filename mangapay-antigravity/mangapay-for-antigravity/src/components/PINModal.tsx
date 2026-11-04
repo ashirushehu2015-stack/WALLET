@@ -4,7 +4,7 @@ import { Fingerprint, X, Delete } from "lucide-react";
 interface Props {
   open: boolean;
   onClose: () => void;
-  onSuccess: () => void;
+  onSuccess: (pin?: string) => void;
   title?: string;
   biometricEnabled?: boolean;
 }
@@ -37,12 +37,7 @@ export default function PINModal({
     setError(false);
     if (next.length === 4) {
       setTimeout(() => {
-        if (next === "1234") {
-          onSuccess();
-        } else {
-          setError(true);
-          setPin("");
-        }
+        onSuccess(next);
       }, 200);
     }
   };
@@ -51,7 +46,7 @@ export default function PINModal({
     setScanning(true);
     setTimeout(() => {
       setScanning(false);
-      onSuccess();
+      onSuccess("1234");
     }, 900);
   };
 
@@ -100,31 +95,29 @@ export default function PINModal({
           </button>
         )}
 
-        <div className="grid grid-cols-3 gap-3">
-          {["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"].map(
-            (key) => {
-              if (key === "") return <div key="empty" />;
-              if (key === "del")
-                return (
-                  <button
-                    key="del"
-                    onClick={() => setPin((p) => p.slice(0, -1))}
-                    className="h-14 rounded-2xl flex items-center justify-center text-text-secondary hover:bg-elevated active:scale-95 transition"
-                  >
-                    <Delete size={22} />
-                  </button>
-                );
-              return (
-                <button
-                  key={key}
-                  onClick={() => handleDigit(key)}
-                  className="h-14 rounded-2xl bg-elevated text-xl font-semibold text-text-primary hover:bg-border active:scale-95 transition"
-                >
-                  {key}
-                </button>
-              );
-            }
-          )}
+        <div className="grid grid-cols-3 gap-3 max-w-[280px] mx-auto">
+          {["1", "2", "3", "4", "5", "6", "7", "8", "9"].map((d) => (
+            <button
+              key={d}
+              onClick={() => handleDigit(d)}
+              className="h-14 rounded-2xl bg-elevated hover:bg-border/60 text-xl font-semibold text-text-primary transition active:scale-95"
+            >
+              {d}
+            </button>
+          ))}
+          <div />
+          <button
+            onClick={() => handleDigit("0")}
+            className="h-14 rounded-2xl bg-elevated hover:bg-border/60 text-xl font-semibold text-text-primary transition active:scale-95"
+          >
+            0
+          </button>
+          <button
+            onClick={() => setPin((p) => p.slice(0, -1))}
+            className="h-14 rounded-2xl bg-elevated hover:bg-border/60 flex items-center justify-center text-text-secondary transition active:scale-95"
+          >
+            <Delete size={22} />
+          </button>
         </div>
       </div>
     </div>

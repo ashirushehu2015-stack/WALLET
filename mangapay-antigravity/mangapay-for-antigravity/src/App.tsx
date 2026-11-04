@@ -7,11 +7,12 @@ import ProfileScreen from "./screens/ProfileScreen";
 import FundBottomSheet from "./components/FundBottomSheet";
 import SendBottomSheet from "./components/SendBottomSheet";
 import WithdrawBottomSheet from "./components/WithdrawBottomSheet";
-import ServicesBottomSheet from "./components/ServicesBottomSheet";
+import ServicesBottomSheet, { ServiceCategory } from "./components/ServicesBottomSheet";
 import VirtualCardsModal from "./components/VirtualCardsModal";
 import PaystackModal from "./components/PaystackModal";
 import PINModal from "./components/PINModal";
 import SuccessModal from "./components/SuccessModal";
+import VASReceiptModal from "./components/VASReceiptModal";
 import OnboardingFlow from "./components/OnboardingFlow";
 import AgentApp from "./agent/AgentApp";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
@@ -24,6 +25,8 @@ import {
   sendMoney,
   withdraw,
   payUtilityBill,
+  purchaseAirtime,
+  purchaseData,
   fundVirtualCard,
   createVirtualCard,
   toggleVirtualCardStatus,
@@ -31,6 +34,7 @@ import {
   type User,
   type Transaction,
   type VirtualCard,
+  type VASTxReceipt,
 } from "./api/api";
 
 type Tab = "home" | "history" | "profile";
@@ -44,6 +48,16 @@ type PendingAction =
       targetAccount: string;
       amount: number;
       packageTitle?: string;
+    }
+  | { type: "vas_airtime"; network: string; recipientPhone: string; amount: number }
+  | {
+      type: "vas_data";
+      network: string;
+      recipientPhone: string;
+      variationCode: string;
+      serviceId?: string;
+      amount: number;
+      planName: string;
     }
   | { type: "card_fund"; cardId: string; amount: number }
   | { type: "card_create"; cardType: "VISA" | "MASTERCARD"; currency: "NGN" | "USD"; initialFund: number }
@@ -62,6 +76,7 @@ export default function App() {
   const [sendOpen, setSendOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [servicesOpen, setServicesOpen] = useState(false);
+  const [servicesCategory, setServicesCategory] = useState<ServiceCategory>("Airtime");
   const [virtualCardsOpen, setVirtualCardsOpen] = useState(false);
   const [onboardingOpen, setOnboardingOpen] = useState<boolean>(true);
   const [agentModeOpen, setAgentModeOpen] = useState(false);
@@ -71,6 +86,10 @@ export default function App() {
     return !isStandalone;
   });
   const [installGuideOpen, setInstallGuideOpen] = useState(false);
+
+  // VAS Receipt Modal State
+  const [vasReceipt, setVasReceipt] = useState<VASTxReceipt | null>(null);
+  const [vasReceiptOpen, setVasReceiptOpen] = useState(false);
 
   useEffect(() => {
     const handleBeforeInstall = (e: Event) => {
@@ -139,13 +158,13 @@ export default function App() {
     setPaystackOpen(true);
   };
 
-  // When Paystack checkout succeeds
+  // Called when Paystack checkout finishes successfully
   const handlePaystackSuccess = async () => {
     setPaystackOpen(false);
     const tx = await fundWallet(paystackAmount);
     await refresh();
     setSuccess({
-      title: "Wallet Funded",
+      title: "Wallet Funded via Paystack",
       amount: paystackAmount,
       reference: tx.reference,
       message: "Funds are now available in your MangaPay wallet.",
@@ -161,6 +180,38 @@ export default function App() {
   const requestWithdraw = async (amount: number, bankId: string) => {
     setPending({ type: "withdraw", amount, bankId });
     setWithdrawOpen(false);
+    setPinOpen(true);
+  };
+
+  const requestAirtime = (params: { network: string; recipientPhone: string; amount: number }) => {
+    setPending({
+      type: "vas_airtime",
+      network: params.network,
+      recipientPhone: params.recipientPhone,
+      amount: params.amount,
+    });
+    setServicesOpen(false);
+    setPinOpen(true);
+  };
+
+  const requestData = (params: {
+    network: string;
+    recipientPhone: string;
+    variationCode: string;
+    serviceId: string;
+    amount: number;
+    planName: string;
+  }) => {
+    setPending({
+      type: "vas_data",
+      network: params.network,
+      recipientPhone: params.recipientPhone,
+      variationCode: params.variationCode,
+      serviceId: params.serviceId,
+      amount: params.amount,
+      planName: params.planName,
+    });
+    setServicesOpen(false);
     setPinOpen(true);
   };
 
@@ -213,12 +264,53 @@ export default function App() {
     await refresh();
   };
 
-  const onPinSuccess = async () => {
+  const onPinSuccess = async (enteredPin?: string) => {
     setPinOpen(false);
     if (!pending) return;
 
+    const pinToUse = enteredPin || "1234";
+
     try {
-      if (pending.type === "send") {
+      if (pending.type === "vas_airtime") {
+        const res = await purchaseAirtime({
+          network: pending.network,
+          recipientPhone: pending.recipientPhone,
+          amount: pending.amount,
+          pin: pinToUse,
+        });
+        await refresh();
+        if (res.receipt) {
+          setVasReceipt(res.receipt);
+          setVasReceiptOpen(true);
+        } else {
+          setSuccess({
+            title: "Airtime Recharged",
+            amount: pending.amount,
+            reference: res.reference,
+            message: `Successfully sent ₦${pending.amount.toLocaleString()} airtime to ${pending.recipientPhone}`,
+          });
+        }
+      } else if (pending.type === "vas_data") {
+        const res = await purchaseData({
+          network: pending.network,
+          recipientPhone: pending.recipientPhone,
+          variationCode: pending.variationCode,
+          serviceId: pending.serviceId,
+          pin: pinToUse,
+        });
+        await refresh();
+        if (res.receipt) {
+          setVasReceipt(res.receipt);
+          setVasReceiptOpen(true);
+        } else {
+          setSuccess({
+            title: "Data Plan Activated",
+            amount: pending.amount,
+            reference: res.reference,
+            message: `Successfully activated ${pending.planName} for ${pending.recipientPhone}`,
+          });
+        }
+      } else if (pending.type === "send") {
         const tx = await sendMoney(pending.amount, pending.to, pending.note);
         await refresh();
         setSuccess({
@@ -294,7 +386,7 @@ export default function App() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
-  if (route === "/privacy") {
+  if (route === "/privacy" || route === "/privacy.html") {
     return (
       <PrivacyPolicy
         onBackToHome={() => {
@@ -308,8 +400,7 @@ export default function App() {
       />
     );
   }
-
-  if (route === "/terms") {
+  if (route === "/terms" || route === "/terms.html") {
     return (
       <TermsOfService
         onBackToHome={() => {
@@ -326,7 +417,7 @@ export default function App() {
 
   if (loading || !user) {
     return (
-      <div className="min-h-full flex items-center justify-center bg-background text-text-primary">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="w-8 h-8 border-2 border-accent border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -341,7 +432,10 @@ export default function App() {
           onFund={() => setFundOpen(true)}
           onSend={() => setSendOpen(true)}
           onWithdraw={() => setWithdrawOpen(true)}
-          onOpenServices={() => setServicesOpen(true)}
+          onOpenServices={(cat) => {
+            setServicesCategory(cat || "Airtime");
+            setServicesOpen(true);
+          }}
           onOpenVirtualCards={() => setVirtualCardsOpen(true)}
           onOpenOnboarding={() => setOnboardingOpen(true)}
           onOpenAgent={() => setAgentModeOpen(true)}
@@ -389,8 +483,16 @@ export default function App() {
       <ServicesBottomSheet
         open={servicesOpen}
         onClose={() => setServicesOpen(false)}
-        onRequestPay={requestPayUtility}
+        initialCategory={servicesCategory}
         balance={user.balance}
+        onRequestAirtime={requestAirtime}
+        onRequestData={requestData}
+        onRequestLegacyPay={requestPayUtility}
+      />
+      <VASReceiptModal
+        open={vasReceiptOpen}
+        onClose={() => setVasReceiptOpen(false)}
+        receipt={vasReceipt}
       />
       <VirtualCardsModal
         open={virtualCardsOpen}
@@ -417,7 +519,11 @@ export default function App() {
         }}
         onSuccess={onPinSuccess}
         title={
-          pending?.type === "send"
+          pending?.type === "vas_airtime"
+            ? "Confirm Airtime Recharge"
+            : pending?.type === "vas_data"
+            ? "Confirm Data Purchase"
+            : pending?.type === "send"
             ? "Confirm Transfer"
             : pending?.type === "withdraw"
             ? "Confirm Withdrawal"
@@ -534,4 +640,3 @@ export default function App() {
     </div>
   );
 }
-

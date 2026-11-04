@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { Search, Plus, ArrowUpRight, ArrowDownLeft, Zap, CreditCard, Check, Share2 } from "lucide-react";
+import { Search, Plus, ArrowUpRight, ArrowDownLeft, Zap, CreditCard, Check, Share2, Smartphone } from "lucide-react";
 import {
   formatNaira,
   formatRelative,
@@ -10,7 +10,7 @@ interface Props {
   transactions: Transaction[];
 }
 
-type Filter = "ALL" | "FUND" | "SEND" | "WITHDRAW" | "UTILITY" | "CARD";
+type Filter = "ALL" | "FUND" | "SEND" | "WITHDRAW" | "AIRTIME_DATA" | "UTILITY" | "CARD";
 
 export default function HistoryScreen({ transactions }: Props) {
   const [filter, setFilter] = useState<Filter>("ALL");
@@ -24,7 +24,8 @@ export default function HistoryScreen({ transactions }: Props) {
       if (filter === "FUND" && tx.type !== "FUND") return false;
       if (filter === "SEND" && tx.type !== "SEND") return false;
       if (filter === "WITHDRAW" && tx.type !== "WITHDRAW") return false;
-      if (filter === "UTILITY" && tx.type !== "UTILITY") return false;
+      if (filter === "AIRTIME_DATA" && tx.type !== "VAS_AIRTIME" && tx.type !== "VAS_DATA") return false;
+      if (filter === "UTILITY" && tx.type !== "UTILITY" && tx.type !== "VAS_AIRTIME" && tx.type !== "VAS_DATA") return false;
       if (filter === "CARD" && tx.type !== "CARD_FUND" && tx.type !== "CARD_CREATE") return false;
 
       if (query) {
@@ -73,15 +74,16 @@ export default function HistoryScreen({ transactions }: Props) {
         />
       </div>
 
-      {/* Filters - Responsive Wrap so all options appear in full */}
+      {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-5">
         {(
           [
             ["ALL", "All Activity"],
+            ["AIRTIME_DATA", "Airtime & Data"],
             ["FUND", "Funded"],
             ["SEND", "Sent"],
             ["WITHDRAW", "Withdrawn"],
-            ["UTILITY", "Bills & Airtime"],
+            ["UTILITY", "Bills & Power"],
             ["CARD", "Virtual Cards"],
           ] as [Filter, string][]
         ).map(([id, label]) => (
@@ -102,64 +104,74 @@ export default function HistoryScreen({ transactions }: Props) {
         ))}
       </div>
 
-      {/* List */}
+      {/* Transactions List */}
       <div className="space-y-2">
-        {visibleTransactions.map((tx) => (
-          <button
-            key={tx.id}
-            onClick={() => setSelected(tx)}
-            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-surface border border-border text-left hover:border-accent/50 transition"
-          >
-            <div
-              className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
-                tx.type === "FUND"
-                  ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
-                  : tx.type === "SEND"
-                  ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
-                  : tx.type === "UTILITY"
-                  ? "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400"
-                  : tx.type.startsWith("CARD")
-                  ? "bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400"
-                  : "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
-              }`}
+        {visibleTransactions.map((tx) => {
+          return (
+            <button
+              key={tx.id}
+              onClick={() => setSelected(tx)}
+              className="w-full flex items-center gap-3 p-3 rounded-2xl bg-surface border border-border text-left hover:border-accent/50 transition"
             >
-              {tx.type === "FUND" ? (
-                <Plus size={18} />
-              ) : tx.type === "SEND" ? (
-                <ArrowUpRight size={18} />
-              ) : tx.type === "UTILITY" ? (
-                <Zap size={18} />
-              ) : tx.type.startsWith("CARD") ? (
-                <CreditCard size={18} />
-              ) : (
-                <ArrowDownLeft size={18} />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-text-primary truncate">{tx.description}</p>
-              <p className="text-[11px] text-text-secondary">
-                {formatRelative(tx.createdAt)} · {tx.reference}
-              </p>
-            </div>
-            <div className="text-right shrink-0">
-              <p
-                className={`text-xs font-bold ${
-                  tx.type === "FUND" ? "text-emerald-600 dark:text-emerald-400" : "text-text-primary"
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  tx.type === "FUND"
+                    ? "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400"
+                    : tx.type === "SEND"
+                    ? "bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400"
+                    : tx.type === "VAS_AIRTIME"
+                    ? "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
+                    : tx.type === "VAS_DATA"
+                    ? "bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400"
+                    : tx.type === "UTILITY"
+                    ? "bg-purple-50 text-purple-600 dark:bg-purple-950/40 dark:text-purple-400"
+                    : tx.type.startsWith("CARD")
+                    ? "bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400"
+                    : "bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400"
                 }`}
               >
-                {tx.type === "FUND" ? "+" : "-"}
-                {formatNaira(tx.amount)}
-              </p>
-              <span
-                className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${statusColor(
-                  tx.status
-                )}`}
-              >
-                {tx.status}
-              </span>
-            </div>
-          </button>
-        ))}
+                {tx.type === "FUND" ? (
+                  <Plus size={18} />
+                ) : tx.type === "SEND" ? (
+                  <ArrowUpRight size={18} />
+                ) : tx.type === "VAS_AIRTIME" ? (
+                  <Smartphone size={18} />
+                ) : tx.type === "VAS_DATA" ? (
+                  <Zap size={18} />
+                ) : tx.type === "UTILITY" ? (
+                  <Zap size={18} />
+                ) : tx.type.startsWith("CARD") ? (
+                  <CreditCard size={18} />
+                ) : (
+                  <ArrowDownLeft size={18} />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-text-primary truncate">{tx.description}</p>
+                <p className="text-[11px] text-text-secondary">
+                  {formatRelative(tx.createdAt)} · {tx.reference}
+                </p>
+              </div>
+              <div className="text-right shrink-0">
+                <p
+                  className={`text-xs font-bold ${
+                    tx.type === "FUND" ? "text-emerald-600 dark:text-emerald-400" : "text-text-primary"
+                  }`}
+                >
+                  {tx.type === "FUND" ? "+" : "-"}
+                  {formatNaira(tx.amount)}
+                </p>
+                <span
+                  className={`text-[9px] px-1.5 py-0.5 rounded-full font-semibold ${statusColor(
+                    tx.status
+                  )}`}
+                >
+                  {tx.status}
+                </span>
+              </div>
+            </button>
+          );
+        })}
 
         {visibleTransactions.length === 0 && (
           <p className="text-center text-xs text-text-secondary py-12">
@@ -261,4 +273,3 @@ export default function HistoryScreen({ transactions }: Props) {
     </div>
   );
 }
-
