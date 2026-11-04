@@ -6,6 +6,7 @@ import authRoutes from './routes/auth.routes';
 import walletRoutes from './routes/wallet.routes';
 import webhookRoutes from './routes/webhook.routes';
 import adminRoutes from './routes/admin.routes';
+import vasRoutes from './modules/vas/vas.routes';
 
 const app = express();
 
@@ -39,6 +40,7 @@ app.get('/health', (req, res) => {
 // API Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/wallet', walletRoutes);
+app.use('/api/v1/vas', vasRoutes);
 app.use('/api/v1/webhooks', webhookRoutes);
 app.use('/api/v1/admin', adminRoutes);
 
