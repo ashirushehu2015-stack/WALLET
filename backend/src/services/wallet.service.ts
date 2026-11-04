@@ -1,4 +1,4 @@
-import { PostingType, TransactionType, TransactionStatus, WithdrawalStatus } from '@prisma/client';
+import { PostingType, TransactionType, TransactionStatus, WithdrawalStatus, VASTransactionStatus } from '@prisma/client';
 import { prisma } from '../config/db';
 import { LedgerService } from './ledger.service';
 import { generateReference, generateWalletNumber } from '../utils/crypto';
@@ -77,17 +77,28 @@ export class WalletService {
     // 1. Calculate Authoritative Live Ledger Balance from ledger_postings
     const ledgerBalance = await LedgerService.getAccountBalance(wallet.ledgerAccountId);
 
-    // 2. Calculate sum of active Pending Holds (PENDING/PROCESSING withdrawals)
-    const pendingWithdrawals = await prisma.withdrawal.aggregate({
-      where: {
-        userId,
-        status: { in: [WithdrawalStatus.PENDING, WithdrawalStatus.PROCESSING] },
-      },
-      _sum: { amount: true, fee: true },
-    });
+    // 2. Calculate sum of active Pending Holds (Withdrawals + Pending VAS orders)
+    const [pendingWithdrawals, pendingVas] = await Promise.all([
+      prisma.withdrawal.aggregate({
+        where: {
+          userId,
+          status: { in: [WithdrawalStatus.PENDING, WithdrawalStatus.PROCESSING] },
+        },
+        _sum: { amount: true, fee: true },
+      }),
+      prisma.vASTransaction.aggregate({
+        where: {
+          userId,
+          status: { in: [VASTransactionStatus.RESERVED, VASTransactionStatus.PROCESSING, VASTransactionStatus.PENDING] },
+        },
+        _sum: { totalAmount: true },
+      }),
+    ]);
 
     const pendingHolds =
-      Number(pendingWithdrawals._sum.amount || 0) + Number(pendingWithdrawals._sum.fee || 0);
+      Number(pendingWithdrawals._sum.amount || 0) +
+      Number(pendingWithdrawals._sum.fee || 0) +
+      Number(pendingVas._sum.totalAmount || 0);
 
     const availableBalance = ledgerBalance - pendingHolds;
 
@@ -120,6 +131,7 @@ export class WalletService {
         { deposit: { userId } },
         { withdrawal: { userId } },
         { transfer: { OR: [{ senderId: userId }, { recipientId: userId }] } },
+        { vasTransaction: { userId } },
       ],
     };
 
@@ -138,6 +150,7 @@ export class WalletService {
           deposit: true,
           withdrawal: true,
           transfer: true,
+          vasTransaction: true,
         },
         orderBy: { createdAt: 'desc' },
         skip,
@@ -153,7 +166,11 @@ export class WalletService {
       amount: Number(t.amount),
       fee: Number(t.fee),
       status: t.status,
-      description: t.journalEntry?.description || `${t.type} Transaction`,
+      description:
+        t.journalEntry?.description ||
+        (t.vasTransaction
+          ? `${t.vasTransaction.serviceType} (${t.vasTransaction.network}) to ${t.vasTransaction.recipientPhone}`
+          : `${t.type} Transaction`),
       createdAt: t.createdAt.toISOString(),
     }));
 
