@@ -54,6 +54,33 @@ enum TransactionType {
   TRANSFER
   FEE
   REVERSAL
+  VAS_AIRTIME
+  VAS_DATA
+}
+
+enum VASServiceType {
+  AIRTIME
+  DATA
+  ELECTRICITY
+  CABLE
+}
+
+enum VASTransactionStatus {
+  INITIATED
+  RESERVED
+  PROCESSING
+  PENDING
+  SUCCESSFUL
+  FAILED
+  REFUND_PENDING
+  REFUNDED
+  REQUIRES_REVIEW
+}
+
+enum VASRefundStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
 }
 
 enum TransactionStatus {
@@ -97,6 +124,7 @@ model User {
   firstName        String
   lastName         String
   passwordHash     String
+  transactionPinHash String?
   role             UserRole     @default(USER)
   status           UserStatus   @default(ACTIVE)
   createdAt        DateTime     @default(now())
@@ -109,6 +137,7 @@ model User {
   withdrawals      Withdrawal[]
   sentTransfers    Transfer[]    @relation("SentTransfers")
   receivedTransfers Transfer[]   @relation("ReceivedTransfers")
+  vasTransactions  VASTransaction[]
   auditLogs        AuditLog[]
   idempotencyKeys  IdempotencyKey[]
 
@@ -206,6 +235,7 @@ model Transaction {
   deposit        Deposit?
   withdrawal     Withdrawal?
   transfer       Transfer?
+  vasTransaction VASTransaction?
 
   @@map("transactions")
 }
@@ -330,4 +360,118 @@ model ReconciliationRecord {
   createdAt             DateTime    @default(now())
 
   @@map("reconciliation_records")
+}
+
+model VASProvider {
+  id              String           @id @default(uuid())
+  name            String           @unique
+  environment     String           @default("sandbox") // sandbox | production
+  isActive        Boolean          @default(true)
+  priority        Int              @default(1)
+  baseUrl         String
+  lastHealthCheck DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  products        VASProduct[]
+  transactions    VASTransaction[]
+
+  @@map("vas_providers")
+}
+
+model VASProduct {
+  id            String         @id @default(uuid())
+  providerId    String
+  provider      VASProvider    @relation(fields: [providerId], references: [id])
+  serviceType   VASServiceType
+  network       String         // MTN, AIRTEL, GLO, 9MOBILE
+  providerCode  String         // e.g. mtn-data, mtn
+  variationCode String?        // e.g. m1024, 1000
+  name          String
+  description   String?
+  dataAllowance String?
+  validity      String?
+  providerCost  Decimal        @db.Decimal(18, 4)
+  sellingPrice  Decimal        @db.Decimal(18, 4)
+  isActive      Boolean        @default(true)
+  lastSyncedAt  DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  transactions  VASTransaction[]
+
+  @@unique([providerId, serviceType, network, providerCode, variationCode])
+  @@map("vas_products")
+}
+
+model VASTransaction {
+  id                    String               @id @default(uuid())
+  userId                String
+  user                  User                 @relation(fields: [userId], references: [id])
+  walletAccountId       String
+  transactionId         String?              @unique
+  transaction           Transaction?         @relation(fields: [transactionId], references: [id])
+  providerId            String?
+  provider              VASProvider?         @relation(fields: [providerId], references: [id])
+  productId             String?
+  product               VASProduct?          @relation(fields: [productId], references: [id])
+  serviceType           VASServiceType
+  network               String               // MTN, AIRTEL, GLO, 9MOBILE
+  recipientPhone        String
+  internalReference     String               @unique
+  idempotencyKey        String?              @unique
+  providerReference     String?              // requestId sent to VTpass
+  providerTransactionId String?              // transactionId returned by VTpass
+  providerCost          Decimal              @db.Decimal(18, 4)
+  sellingPrice          Decimal              @db.Decimal(18, 4)
+  serviceFee            Decimal              @default(0.0000) @db.Decimal(18, 4)
+  totalAmount           Decimal              @db.Decimal(18, 4)
+  profitAmount          Decimal              @default(0.0000) @db.Decimal(18, 4)
+  status                VASTransactionStatus @default(INITIATED)
+  providerResponseCode  String?
+  providerResponseMessage String?
+  failureReason         String?
+  initiatedAt           DateTime             @default(now())
+  processedAt           DateTime?
+  completedAt           DateTime?
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+
+  refund                VASRefund?
+
+  @@index([userId])
+  @@index([status])
+  @@index([providerReference])
+  @@index([createdAt])
+  @@map("vas_transactions")
+}
+
+model VASRefund {
+  id               String          @id @default(uuid())
+  vasTransactionId String          @unique
+  vasTransaction   VASTransaction  @relation(fields: [vasTransactionId], references: [id])
+  amount           Decimal         @db.Decimal(18, 4)
+  refundReference  String          @unique
+  reason           String
+  status           VASRefundStatus @default(SUCCESSFUL)
+  initiatedBy      String?         // USER, ADMIN, or SYSTEM
+  completedAt      DateTime        @default(now())
+  createdAt        DateTime        @default(now())
+
+  @@map("vas_refunds")
+}
+
+model VASWebhookEvent {
+  id               String        @id @default(uuid())
+  providerName     String
+  eventReference   String        @unique
+  eventType        String
+  payloadHash      String
+  payload          Json
+  processingStatus WebhookStatus @default(RECEIVED)
+  errorMessage     String?
+  receivedAt       DateTime      @default(now())
+  processedAt      DateTime?
+
+  @@map("vas_webhook_events")
 }

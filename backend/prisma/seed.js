@@ -29,6 +29,18 @@ async function main() {
             currency: 'NGN',
             description: 'System equity and reserves account',
         },
+        {
+            name: 'VTPASS_CLEARING_ASSET',
+            type: client_1.AccountType.ASSET,
+            currency: 'NGN',
+            description: 'Asset account holding prefunded VTU balance with VTpass gateway',
+        },
+        {
+            name: 'VAS_COMMISSION_INCOME',
+            type: client_1.AccountType.INCOME,
+            currency: 'NGN',
+            description: 'Revenue earned from airtime & mobile data sales discounts and commissions',
+        },
     ];
     for (const account of systemAccounts) {
         const existing = await prisma.ledgerAccount.findUnique({
@@ -44,6 +56,26 @@ async function main() {
             console.log(`ℹ️ System Ledger Account exists: ${account.name}`);
         }
     }
+
+    // Seed default VAS Provider (VTpass)
+    const existingProvider = await prisma.vASProvider.findUnique({
+        where: { name: 'VTPASS' },
+    });
+    if (!existingProvider) {
+        await prisma.vASProvider.create({
+            data: {
+                name: 'VTPASS',
+                baseUrl: process.env.VTPASS_BASE_URL || 'https://sandbox.vtpass.com/api',
+                environment: process.env.VTPASS_ENVIRONMENT || 'sandbox',
+                isActive: true,
+                priority: 1,
+            },
+        });
+        console.log('✅ Created Default VAS Provider: VTPASS [sandbox]');
+    } else {
+        console.log('ℹ️ Default VAS Provider exists: VTPASS');
+    }
+
     console.log('✅ Seeding complete!');
 }
 main()
