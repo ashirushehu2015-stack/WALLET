@@ -3,6 +3,7 @@ import {
   LayoutDashboard,
   BookOpen,
   ArrowRightLeft,
+  Smartphone,
   Webhook,
   Scale,
   ShieldAlert,
@@ -17,6 +18,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab }) => {
   const navItems = [
     { id: 'overview', label: 'System Overview', icon: LayoutDashboard },
+    { id: 'vas', label: 'Airtime & VAS Hub', icon: Smartphone },
     { id: 'ledger', label: 'Double-Entry Ledger', icon: BookOpen },
     { id: 'transactions', label: 'Transactions Journal', icon: ArrowRightLeft },
     { id: 'webhooks', label: 'Paystack Webhooks', icon: Webhook },

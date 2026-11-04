@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Navbar } from './components/Navbar';
 import { Sidebar } from './components/Sidebar';
 import { Overview } from './pages/Overview';
+import { VASManagement } from './pages/VASManagement';
 import { LedgerBrowser } from './pages/LedgerBrowser';
 import { Transactions } from './pages/Transactions';
 import { Webhooks } from './pages/Webhooks';
@@ -27,6 +28,7 @@ export const App: React.FC = () => {
 
         <main className="flex-1 p-8 max-w-7xl mx-auto w-full">
           {activeTab === 'overview' && <Overview metrics={metrics} />}
+          {activeTab === 'vas' && <VASManagement />}
           {activeTab === 'ledger' && <LedgerBrowser />}
           {activeTab === 'transactions' && <Transactions />}
           {activeTab === 'webhooks' && <Webhooks />}
