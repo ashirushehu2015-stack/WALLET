@@ -277,7 +277,7 @@ export default function PrivacyPolicy({ onBackToHome, onNavigateToTerms }: Props
       <footer className="bg-gray-50 border-t border-gray-100 py-8 px-4 md:px-8 mt-12">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
           <div>
-            <p className="text-xs font-bold text-gray-800">MangaPay Financial Technologies Limited</p>
+            <p className="text-xs font-bold text-gray-800">Manga Business Digital Solutions</p>
             <p className="text-[11px] text-gray-500 mt-0.5">© 2026 MangaPay. All rights reserved.</p>
           </div>
           <div className="flex items-center gap-4 text-xs font-bold text-gray-600">
