@@ -2,8 +2,11 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
+import { getCorsOptions } from './config/cors';
+import { killSwitchGuard } from './middlewares/killSwitch';
 import authRoutes from './routes/auth.routes';
 import walletRoutes from './routes/wallet.routes';
+import kycRoutes from './routes/kyc.routes';
 import webhookRoutes from './routes/webhook.routes';
 import adminRoutes from './routes/admin.routes';
 import vasRoutes from './modules/vas/vas.routes';
@@ -12,7 +15,7 @@ const app = express();
 
 // Security middlewares
 app.use(helmet());
-app.use(cors({ origin: '*' }));
+app.use(cors(getCorsOptions()));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -37,12 +40,24 @@ app.get('/health', (req, res) => {
   res.json({ status: 'UP', service: 'Wallet & Ledger Engine', timestamp: new Date() });
 });
 
+// Mount Emergency Kill Switch Guard (protects customer mutations during suspension)
+app.use(killSwitchGuard);
+
 // API Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/wallet', walletRoutes);
+app.use('/api/v1/kyc', kycRoutes);
 app.use('/api/v1/vas', vasRoutes);
 app.use('/api/v1/webhooks', webhookRoutes);
 app.use('/api/v1/admin', adminRoutes);
+
+// Error handling for CORS and internal errors
+app.use((err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (err.message && err.message.includes('CORS Policy Violation')) {
+    return res.status(403).json({ success: false, message: err.message });
+  }
+  next(err);
+});
 
 // Global 404 handler
 app.use((req, res) => {

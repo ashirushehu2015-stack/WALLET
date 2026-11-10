@@ -19,31 +19,31 @@ export const Overview: React.FC<OverviewProps> = ({ metrics }) => {
       <div className="grid grid-[#111827] grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
         <MetricCard
           title="Active Users"
-          value={metrics ? metrics.userCount.toLocaleString() : '142'}
+          value={metrics ? metrics.userCount.toLocaleString() : '—'}
           subtitle="Registered KYC verified wallets"
           icon={Users}
-          trend="+12%"
+          trend="+0%"
           accentColor="indigo"
         />
         <MetricCard
           title="Total Paystack Deposits"
-          value={`₦${metrics ? metrics.totalDeposits.toLocaleString('en-NG', { minimumFractionDigits: 2 }) : '4,850,000.00'}`}
+          value={metrics ? `₦${metrics.totalDeposits.toLocaleString('en-NG', { minimumFractionDigits: 2 })}` : '—'}
           subtitle="Processed via DVA & Webhooks"
           icon={ArrowDownLeft}
-          trend="+24.5%"
+          trend="+0%"
           accentColor="emerald"
         />
         <MetricCard
           title="Total Bank Withdrawals"
-          value={`₦${metrics ? metrics.totalWithdrawals.toLocaleString('en-NG', { minimumFractionDigits: 2 }) : '1,240,000.00'}`}
+          value={metrics ? `₦${metrics.totalWithdrawals.toLocaleString('en-NG', { minimumFractionDigits: 2 })}` : '—'}
           subtitle="Outward bank transfers"
           icon={ArrowUpRight}
-          trend="+8.2%"
+          trend="+0%"
           accentColor="cyan"
         />
         <MetricCard
           title="Ledger Accounts"
-          value={metrics ? metrics.ledgerAccountsCount.toString() : '146'}
+          value={metrics ? metrics.ledgerAccountsCount.toString() : '—'}
           subtitle="Active Chart of Accounts"
           icon={Wallet}
           accentColor="purple"
@@ -73,14 +73,14 @@ export const Overview: React.FC<OverviewProps> = ({ metrics }) => {
           <div>
             <span className="text-[10px] text-slate-500 block uppercase">Total Debits</span>
             <span className="text-emerald-400 font-bold">
-              ₦{metrics ? metrics.trialBalance.totalDebits.toLocaleString('en-NG', { minimumFractionDigits: 2 }) : '6,090,000.00'}
+              {metrics ? `₦${metrics.trialBalance.totalDebits.toLocaleString('en-NG', { minimumFractionDigits: 2 })}` : '—'}
             </span>
           </div>
           <span className="text-slate-600 font-extrabold text-lg">=</span>
           <div>
             <span className="text-[10px] text-slate-500 block uppercase">Total Credits</span>
             <span className="text-cyan-400 font-bold">
-              ₦{metrics ? metrics.trialBalance.totalCredits.toLocaleString('en-NG', { minimumFractionDigits: 2 }) : '6,090,000.00'}
+              {metrics ? `₦${metrics.trialBalance.totalCredits.toLocaleString('en-NG', { minimumFractionDigits: 2 })}` : '—'}
             </span>
           </div>
         </div>

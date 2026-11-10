@@ -58,10 +58,13 @@ export default function VirtualCardsModal({
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40 backdrop-blur-sm">
       <div className="bg-surface text-text-primary w-full max-w-md rounded-t-[24px] p-6 pb-8 shadow-soft max-h-[90vh] overflow-y-auto border-t border-border">
         {/* Header */}
-        <div className="flex items-center justify-between mb-5">
+        <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
             <CreditCard className="text-accent" size={22} />
             <h3 className="text-lg font-semibold">Virtual Cards</h3>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 border border-amber-500/30">
+              Unavailable in MVP
+            </span>
           </div>
           <button
             onClick={onClose}
@@ -69,6 +72,16 @@ export default function VirtualCardsModal({
           >
             <X size={20} />
           </button>
+        </div>
+
+        {/* Regulatory & Partner Dependency Advisory Notice */}
+        <div className="bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 rounded-2xl p-4 mb-5 text-xs">
+          <p className="font-bold flex items-center gap-1.5 mb-1">
+            <span>⚠️</span> Regulatory Notice: Partner Bank Approval Required
+          </p>
+          <p className="leading-relaxed opacity-90">
+            MangaPay operates as a technology provider under business registration. Stored-value payment card issuance requires commercial bank partnership and CBN regulatory authorization. Real card creation and funding are temporarily disabled until our licensed partner bank integration goes live.
+          </p>
         </div>
 
         {mode === "view" && (
@@ -205,26 +218,28 @@ export default function VirtualCardsModal({
                     </p>
                   </div>
                   <button
-                    onClick={() => setMode("fund")}
-                    disabled={activeCard.isFrozen}
-                    className="px-4 py-2 rounded-xl bg-accent text-white font-semibold text-xs disabled:opacity-40 hover:opacity-90"
+                    onClick={() => {}}
+                    disabled={true}
+                    title="Unavailable in MVP pending commercial bank partnership"
+                    className="px-4 py-2 rounded-xl bg-gray-400 text-white font-semibold text-xs opacity-60 cursor-not-allowed"
                   >
-                    Fund Card
+                    Fund Card (Disabled)
                   </button>
                 </div>
               </>
             ) : (
               <div className="text-center py-8 text-text-secondary text-sm">
-                No virtual cards yet. Create your first instant card below!
+                Virtual card issuance is temporarily disabled for MVP.
               </div>
             )}
 
             <button
-              onClick={() => setMode("create")}
-              className="w-full h-14 rounded-2xl border-2 border-dashed border-accent/40 bg-accent-soft/30 hover:bg-accent-soft/60 text-accent font-semibold flex items-center justify-center gap-2 transition"
+              disabled={true}
+              title="Virtual cards require licensed bank partner integration"
+              className="w-full h-14 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-800 text-text-secondary font-semibold flex items-center justify-center gap-2 cursor-not-allowed opacity-75"
             >
               <Plus size={20} />
-              <span>Create New Virtual Card</span>
+              <span>Create Virtual Card (Coming Soon)</span>
             </button>
           </div>
         )}
@@ -264,10 +279,10 @@ export default function VirtualCardsModal({
 
             <button
               onClick={handleFundSubmit}
-              disabled={!fundAmount || Number(fundAmount.replace(/,/g, "")) > balance}
-              className="w-full h-14 rounded-2xl bg-accent text-white font-semibold disabled:opacity-40 hover:opacity-90"
+              disabled={true}
+              className="w-full h-14 rounded-2xl bg-gray-400 text-white font-semibold cursor-not-allowed opacity-60"
             >
-              Continue to PIN
+              Funding Unavailable in MVP
             </button>
           </div>
         )}
@@ -354,10 +369,11 @@ export default function VirtualCardsModal({
 
             <button
               onClick={handleCreateSubmit}
-              className="w-full h-14 rounded-2xl bg-accent text-white font-semibold flex items-center justify-center gap-2 hover:opacity-90 transition"
+              disabled={true}
+              className="w-full h-14 rounded-2xl bg-gray-400 text-white font-semibold flex items-center justify-center gap-2 cursor-not-allowed opacity-60"
             >
               <Sparkles size={18} />
-              <span>Create Card with PIN</span>
+              <span>Card Issuance Unavailable in MVP</span>
             </button>
           </div>
         )}

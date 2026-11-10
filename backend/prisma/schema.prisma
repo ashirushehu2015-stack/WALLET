@@ -16,12 +16,24 @@ enum UserStatus {
 enum UserRole {
   USER
   ADMIN
+  SUPER_ADMIN
+}
+
+enum RefundApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXECUTED
+  CANCELLED
 }
 
 enum KYCStatus {
-  PENDING
+  REGISTERED
+  VERIFICATION_PENDING
   VERIFIED
   REJECTED
+  UNAVAILABLE
+  PENDING
 }
 
 enum KYCTier {
@@ -140,6 +152,9 @@ model User {
   vasTransactions  VASTransaction[]
   auditLogs        AuditLog[]
   idempotencyKeys  IdempotencyKey[]
+  passwordResetTokens PasswordResetToken[]
+  requestedRefunds    RefundApprovalRequest[] @relation("RequestedRefunds")
+  approvedRefunds     RefundApprovalRequest[] @relation("ApprovedRefunds")
 
   @@map("users")
 }
@@ -151,7 +166,7 @@ model KYCRecord {
   bvn             String?   // Encrypted
   nin             String?   // Encrypted
   tier            KYCTier   @default(TIER_1)
-  status          KYCStatus @default(PENDING)
+  status          KYCStatus @default(REGISTERED)
   rejectionReason String?
   verifiedAt      DateTime?
   createdAt       DateTime  @default(now())
@@ -266,6 +281,12 @@ model Deposit {
   paystackFee       Decimal  @default(0.0000) @db.Decimal(18, 4)
   netAmount         Decimal  @db.Decimal(18, 4)
   status            TransactionStatus @default(SUCCESS)
+  isSuspense        Boolean  @default(false)
+  suspenseReason    String?
+  refundStatus      String?  @default("NONE") // NONE, PENDING, REFUNDED, FAILED
+  refundedAmount    Decimal  @default(0.0000) @db.Decimal(18, 4)
+  paystackRefundId  String?
+  refundApprovals   RefundApprovalRequest[]
   createdAt         DateTime @default(now())
 
   @@map("deposits")
@@ -308,15 +329,23 @@ model Transfer {
 }
 
 model IdempotencyKey {
-  id             String   @id @default(uuid())
-  key            String   @unique
-  userId         String?
-  user           User?    @relation(fields: [userId], references: [id])
-  requestPath    String
-  responseStatus Int
-  responseBody   Json
-  createdAt      DateTime @default(now())
+  id                   String    @id @default(uuid())
+  key                  String
+  userId               String?
+  user                 User?     @relation(fields: [userId], references: [id])
+  requestPath          String
+  requestHash          String?
+  operationType        String?
+  transactionReference String?
+  leaseOwner           String?
+  lastProcessingUpdate DateTime? @default(now()) @updatedAt
+  responseStatus       Int
+  responseBody         Json
+  createdAt            DateTime  @default(now())
 
+  @@unique([userId, key])
+  @@index([key])
+  @@index([createdAt])
   @@map("idempotency_keys")
 }
 
@@ -474,4 +503,45 @@ model VASWebhookEvent {
   processedAt      DateTime?
 
   @@map("vas_webhook_events")
+}
+
+model PasswordResetToken {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  identifier  String   // email or phone number
+  tokenHash   String
+  expiresAt   DateTime
+  attempts    Int      @default(0)
+  maxAttempts Int      @default(5)
+  isUsed      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([identifier])
+  @@index([userId])
+  @@map("password_reset_tokens")
+}
+
+model RefundApprovalRequest {
+  id               String               @id @default(uuid())
+  depositId        String
+  deposit          Deposit              @relation(fields: [depositId], references: [id], onDelete: Cascade)
+  requesterId      String
+  requester        User                 @relation("RequestedRefunds", fields: [requesterId], references: [id])
+  approverId       String?
+  approver         User?                @relation("ApprovedRefunds", fields: [approverId], references: [id])
+  amount           Decimal              @db.Decimal(18, 4)
+  reason           String
+  status           RefundApprovalStatus @default(PENDING)
+  approvedAt       DateTime?
+  rejectionReason  String?
+  executedAt       DateTime?
+  paystackRefundId String?
+  journalEntryRef  String?
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@index([depositId])
+  @@index([status])
+  @@map("refund_approval_requests")
 }

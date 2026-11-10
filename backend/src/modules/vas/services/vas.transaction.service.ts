@@ -34,17 +34,78 @@ export interface DataOrderInput {
   idempotencyKey?: string;
 }
 
+interface PinAttemptRecord {
+  failedAttempts: number;
+  lockedUntil?: number;
+}
+
+// In-memory attempt tracker for transaction PIN (keyed by userId)
+const pinAttempts = new Map<string, PinAttemptRecord>();
+const MAX_PIN_ATTEMPTS = 5;
+const PIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes lockout
+
 export class VASTransactionService {
   /**
-   * Helper to verify customer transaction PIN
+   * Helper to verify customer transaction PIN with strict validation, attempt limits and lockout.
+   * REMOVED: Default 1234 fallback completely eliminated.
    */
-  private static async verifyUserPin(user: any, pin: string): Promise<boolean> {
-    if (!pin) return false;
-    if (user.transactionPinHash) {
-      return bcrypt.compare(pin, user.transactionPinHash);
+  public static async verifyUserPin(user: any, pin: string): Promise<{ valid: boolean; reason?: string }> {
+    if (!user || !user.id) {
+      return { valid: false, reason: 'User session context missing.' };
     }
-    // Default fallback PIN for legacy/test accounts
-    return pin === '1234';
+
+    // 1. Enforce that the user has configured a custom transaction PIN
+    if (!user.transactionPinHash) {
+      return {
+        valid: false,
+        reason: 'Transaction PIN has not been set. Please configure your 4-digit PIN in settings before transacting.',
+      };
+    }
+
+    if (!pin || typeof pin !== 'string' || !/^\d{4}$/.test(pin)) {
+      return { valid: false, reason: 'Transaction PIN must be exactly 4 numeric digits.' };
+    }
+
+    // 2. Enforce lockout timer
+    const now = Date.now();
+    const record = pinAttempts.get(user.id) || { failedAttempts: 0 };
+    if (record.lockedUntil && record.lockedUntil > now) {
+      const remainingMinutes = Math.ceil((record.lockedUntil - now) / 60000);
+      return {
+        valid: false,
+        reason: `Transaction PIN is locked due to too many failed attempts. Try again in ${remainingMinutes} minute(s).`,
+      };
+    }
+
+    // 3. Cryptographically compare with stored bcrypt hash
+    const match = await bcrypt.compare(pin, user.transactionPinHash);
+    if (match) {
+      // Clear failed attempts upon successful authentication
+      pinAttempts.delete(user.id);
+      return { valid: true };
+    }
+
+    // 4. Increment failure counter and trigger lockout if limit reached
+    const newFailed = (record.failedAttempts || 0) + 1;
+    if (newFailed >= MAX_PIN_ATTEMPTS) {
+      pinAttempts.set(user.id, {
+        failedAttempts: newFailed,
+        lockedUntil: now + PIN_LOCKOUT_MS,
+      });
+      return {
+        valid: false,
+        reason: `Transaction PIN locked for 15 minutes due to ${MAX_PIN_ATTEMPTS} consecutive incorrect entries.`,
+      };
+    } else {
+      pinAttempts.set(user.id, {
+        failedAttempts: newFailed,
+      });
+      const attemptsRemaining = MAX_PIN_ATTEMPTS - newFailed;
+      return {
+        valid: false,
+        reason: `Incorrect transaction PIN. ${attemptsRemaining} attempt(s) remaining before account lockout.`,
+      };
+    }
   }
 
   /**
@@ -59,6 +120,8 @@ export class VASTransactionService {
       where: { id: userId },
       data: { transactionPinHash: hash },
     });
+    // Reset lockout state when a new PIN is configured
+    pinAttempts.delete(userId);
   }
 
   /**
@@ -81,9 +144,9 @@ export class VASTransactionService {
     }
 
     // 1. Verify Transaction PIN
-    const isPinValid = await this.verifyUserPin(user, input.pin);
-    if (!isPinValid) {
-      throw new Error('Invalid 4-digit transaction PIN.');
+    const pinCheck = await this.verifyUserPin(user, input.pin);
+    if (!pinCheck.valid) {
+      throw new Error(pinCheck.reason || 'Invalid 4-digit transaction PIN.');
     }
 
     // 2. Authoritative Price Quote from Server-Side Pricing Engine
@@ -227,9 +290,9 @@ export class VASTransactionService {
     }
 
     // 1. Verify Transaction PIN
-    const isPinValid = await this.verifyUserPin(user, input.pin);
-    if (!isPinValid) {
-      throw new Error('Invalid 4-digit transaction PIN.');
+    const pinCheck = await this.verifyUserPin(user, input.pin);
+    if (!pinCheck.valid) {
+      throw new Error(pinCheck.reason || 'Invalid 4-digit transaction PIN.');
     }
 
     // 2. Authoritative Plan Verification from Provider/DB (Never trust frontend price)

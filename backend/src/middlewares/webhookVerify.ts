@@ -8,8 +8,12 @@ export interface RawBodyRequest extends Request {
 export function verifyPaystackWebhookHeader(req: RawBodyRequest, res: Response, next: NextFunction) {
   const signature = req.headers['x-paystack-signature'] as string;
 
-  // Allow test mode bypass in dev environment if signature is 'test-signature'
-  if (process.env.NODE_ENV === 'development' && (!signature || signature === 'test-signature')) {
+  if (!signature) {
+    return res.status(401).json({ success: false, message: 'Missing x-paystack-signature header' });
+  }
+
+  // Allow explicit mock signature in isolated unit testing environment only
+  if (process.env.NODE_ENV === 'test' && signature === 'test-signature') {
     return next();
   }
 
@@ -20,10 +24,14 @@ export function verifyPaystackWebhookHeader(req: RawBodyRequest, res: Response, 
   // Use unparsed raw bytes string for cryptographic HMAC verification
   const payloadString = req.rawBody.toString('utf8');
 
-  const isValid = verifyPaystackSignature(payloadString, signature);
-  if (!isValid) {
-    return res.status(401).json({ success: false, message: 'Invalid Paystack HMAC signature' });
-  }
+  try {
+    const isValid = verifyPaystackSignature(payloadString, signature);
+    if (!isValid) {
+      return res.status(401).json({ success: false, message: 'Invalid Paystack HMAC signature' });
+    }
 
-  next();
+    next();
+  } catch (error: any) {
+    return res.status(401).json({ success: false, message: 'Malformed Paystack HMAC signature' });
+  }
 }

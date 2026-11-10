@@ -2,6 +2,7 @@ import { PostingType, TransactionType, TransactionStatus, WebhookStatus, Withdra
 import { prisma } from '../config/db';
 import { logger } from '../config/logger';
 import { LedgerService } from './ledger.service';
+import { KYCService } from './kyc.service';
 import { generateReference } from '../utils/crypto';
 
 export class WebhookService {
@@ -102,6 +103,111 @@ export class WebhookService {
     const userWallet = dva.user.walletAccount;
 
     await prisma.$transaction(async (tx) => {
+      // 1. Authoritative KYC Tier & Balance Limit Enforcement
+      const currentLiveBalance = await LedgerService.getAccountBalance(userWallet.ledgerAccountId, tx);
+      const kycValidation = await KYCService.validateDeposit(userId, amountNGN, currentLiveBalance, tx);
+
+      if (!kycValidation.valid) {
+        logger.warn(`Inbound deposit held in suspense by KYC policy [Ref: ${paystackReference}]: ${kycValidation.reason}`);
+        
+        // Retrieve Clearing Asset and Suspense Liability Accounts
+        const paystackClearing = await tx.ledgerAccount.findUnique({
+          where: { name: 'PAYSTACK_CLEARING_ASSET' },
+        });
+
+        if (!paystackClearing) {
+          throw new Error('System ledger account PAYSTACK_CLEARING_ASSET missing.');
+        }
+
+        let suspenseLiability = await tx.ledgerAccount.findUnique({
+          where: { name: 'SUSPENSE_LIABILITY' },
+        });
+
+        if (!suspenseLiability) {
+          suspenseLiability = await tx.ledgerAccount.create({
+            data: {
+              name: 'SUSPENSE_LIABILITY',
+              type: 'LIABILITY',
+              currency: 'NGN',
+              description: 'Uncredited customer deposits held in suspense due to KYC limits or compliance holds',
+            },
+          });
+        }
+
+        const suspenseRef = generateReference('DEP-SUS');
+
+        // Post Double-Entry Suspense Journal Entry:
+        // DEBIT Paystack Clearing Asset (amountNGN) -> Gross funds received at gateway
+        // CREDIT Suspense Liability (amountNGN) -> Uncredited customer funds held in suspense
+        const suspenseJournal = await LedgerService.postJournalEntry(
+          {
+            reference: suspenseRef,
+            description: `KYC Limit Hold: Deposit held in suspense [Ref: ${paystackReference}] - ${kycValidation.reason}`,
+            postings: [
+              {
+                ledgerAccountId: paystackClearing.id,
+                entryType: PostingType.DEBIT,
+                amount: amountNGN,
+              },
+              {
+                ledgerAccountId: suspenseLiability.id,
+                entryType: PostingType.CREDIT,
+                amount: amountNGN,
+              },
+            ],
+          },
+          tx
+        );
+
+        const suspenseTx = await tx.transaction.create({
+          data: {
+            reference: suspenseRef,
+            type: TransactionType.DEPOSIT,
+            amount: amountNGN,
+            fee: paystackFeeNGN,
+            status: TransactionStatus.PENDING, // Pending KYC resolution or admin refund
+            journalEntryId: suspenseJournal.id,
+          },
+        });
+
+        await tx.deposit.create({
+          data: {
+            userId,
+            transactionId: suspenseTx.id,
+            paystackReference,
+            channel: data.channel || 'DVA',
+            amount: amountNGN,
+            paystackFee: paystackFeeNGN,
+            netAmount: amountNGN - paystackFeeNGN,
+            status: TransactionStatus.PENDING,
+            isSuspense: true,
+            suspenseReason: kycValidation.reason,
+            refundStatus: 'NONE',
+            refundedAmount: 0,
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            actorId: userId,
+            actorType: 'SYSTEM',
+            action: 'KYC_DEPOSIT_SUSPENSE_POSTED',
+            resource: `deposits/${paystackReference}`,
+            details: {
+              reason: kycValidation.reason,
+              amount: amountNGN,
+              tier: kycValidation.tier,
+              limits: kycValidation.limits,
+              suspenseRef,
+              journalEntryId: suspenseJournal.id,
+            },
+          },
+        });
+
+        logger.info(`Deposit Suspense Account Credited [Ref: ${paystackReference}]: NGN ${amountNGN.toFixed(2)} held in SUSPENSE_LIABILITY.`);
+        return; // HALT: Customer wallet balance is NOT credited!
+      }
+
       const paystackClearing = await tx.ledgerAccount.findUnique({
         where: { name: 'PAYSTACK_CLEARING_ASSET' },
       });

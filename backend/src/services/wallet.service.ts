@@ -1,8 +1,10 @@
 import { PostingType, TransactionType, TransactionStatus, WithdrawalStatus, VASTransactionStatus } from '@prisma/client';
 import { prisma } from '../config/db';
 import { LedgerService } from './ledger.service';
+import { KYCService } from './kyc.service';
 import { generateReference, generateWalletNumber } from '../utils/crypto';
-import { PaystackService } from './paystack.service';
+import { PaystackService, PaystackTimeoutError } from './paystack.service';
+import { logger } from '../config/logger';
 
 export class WalletService {
   /**
@@ -248,6 +250,19 @@ export class WalletService {
         throw new Error('Self-transfer is not permitted.');
       }
 
+      // KYC Tier & Daily Outflow Limits Verification
+      const liveRecipientBalance = await LedgerService.getAccountBalance(recipientWallet.ledgerAccountId, tx);
+      const kycValidation = await KYCService.validateTransfer(
+        senderId,
+        recipientWallet.userId,
+        amount,
+        liveRecipientBalance,
+        tx
+      );
+      if (!kycValidation.valid) {
+        throw new Error(kycValidation.reason);
+      }
+
       const reference = generateReference('P2P');
 
       // 4. Post Atomic Double-Entry Journal Entry
@@ -360,6 +375,12 @@ export class WalletService {
         );
       }
 
+      // KYC Tier & Daily Outflow Limits Verification
+      const kycValidation = await KYCService.validateWithdrawal(userId, amount, tx);
+      if (!kycValidation.valid) {
+        throw new Error(kycValidation.reason);
+      }
+
       // 5. Create Transaction Record (PENDING)
       const transaction = await tx.transaction.create({
         data: {
@@ -409,7 +430,46 @@ export class WalletService {
         },
       });
     } catch (paystackError: any) {
-      // If Paystack API fails synchronously, release pending hold immediately
+      if (paystackError instanceof PaystackTimeoutError) {
+        // AMBIGUOUS TIMEOUT: Attempt immediate requery before deciding to release hold
+        try {
+          const requeryResult = await PaystackService.verifyTransfer(reference);
+          if (
+            requeryResult.status === 'SUCCESSFUL' ||
+            requeryResult.status === 'PROCESSING' ||
+            requeryResult.status === 'PENDING'
+          ) {
+            // Transfer reached Paystack: Retain pending hold
+            return await prisma.withdrawal.update({
+              where: { id: withdrawalReservation.withdrawal.id },
+              data: {
+                status: WithdrawalStatus.PROCESSING,
+                paystackTransferCode: requeryResult.data?.transfer_code || `TRF_${reference}`,
+              },
+            });
+          } else if (requeryResult.status === 'FAILED' || requeryResult.status === 'REVERSED') {
+            // Definitive failure confirmed by provider requery: release hold
+            await prisma.$transaction(async (tx) => {
+              await tx.withdrawal.update({
+                where: { id: withdrawalReservation.withdrawal.id },
+                data: { status: WithdrawalStatus.FAILED },
+              });
+              await tx.transaction.update({
+                where: { id: withdrawalReservation.transaction.id },
+                data: { status: TransactionStatus.FAILED },
+              });
+            });
+            throw new Error(`Paystack Payout Failed definitively: ${requeryResult.rawStatus}`);
+          }
+        } catch (requeryErr) {
+          // Requery timed out or provider unreachable: DO NOT release funds!
+          // Retain pending hold awaiting asynchronous webhook or manual admin recon
+          logger.warn(`Payout timeout for ref ${reference} could not be resolved by immediate requery. Retaining pending hold.`);
+          return withdrawalReservation.withdrawal;
+        }
+      }
+
+      // Definitive synchronous provider failure: release pending hold immediately
       await prisma.$transaction(async (tx) => {
         await tx.withdrawal.update({
           where: { id: withdrawalReservation.withdrawal.id },

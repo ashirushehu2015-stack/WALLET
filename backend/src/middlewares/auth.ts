@@ -26,8 +26,15 @@ export function authenticateJWT(req: AuthenticatedRequest, res: Response, next: 
 }
 
 export function requireAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
-  if (!req.user || req.user.role !== 'ADMIN') {
+  if (!req.user || (req.user.role !== 'ADMIN' && req.user.role !== 'SUPER_ADMIN')) {
     return res.status(403).json({ success: false, message: 'Forbidden: Admin access required' });
+  }
+  next();
+}
+
+export function requireSuperAdmin(req: AuthenticatedRequest, res: Response, next: NextFunction) {
+  if (!req.user || req.user.role !== 'SUPER_ADMIN') {
+    return res.status(403).json({ success: false, message: 'Forbidden: Super Admin authorization required' });
   }
   next();
 }

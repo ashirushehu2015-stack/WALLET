@@ -72,10 +72,11 @@ export default function HomeScreen({
           )}
           {onOpenAgent && (
             <button
-              onClick={onOpenAgent}
-              className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-elevated border border-border text-text-primary hover:border-accent transition"
+              onClick={() => alert('Agency Banking requires commercial bank partnership and CBN Super-Agent licensing. Feature is disabled in MVP.')}
+              className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-elevated border border-border text-text-secondary hover:border-accent transition opacity-75"
+              title="Agency Banking requires partner bank licensing"
             >
-              Agent Mode
+              Agent (Disabled)
             </button>
           )}
           {onOpenOnboarding && (
@@ -148,7 +149,7 @@ export default function HomeScreen({
             { label: "Airtime", icon: Smartphone, action: () => onOpenServices("Airtime") },
             { label: "Data", icon: Zap, action: () => onOpenServices("Data") },
             { label: "Cable TV", icon: Tv, action: () => onOpenServices("Cable") },
-            { label: "Virtual Card", icon: CreditCard, action: onOpenVirtualCards },
+            { label: "Cards (Soon)", icon: CreditCard, action: onOpenVirtualCards },
           ].map(({ label, icon: Icon, action }) => (
             <button
               key={label}
@@ -176,8 +177,8 @@ export default function HomeScreen({
             <CreditCard size={20} className="text-teal-200" />
           </div>
           <div>
-            <p className="font-bold text-xs">MangaPay Virtual Visa & Mastercard</p>
-            <p className="text-[11px] text-teal-100/80">Shop globally without limits</p>
+            <p className="font-bold text-xs">MangaPay Virtual Visa & Mastercard (Coming Soon)</p>
+            <p className="text-[11px] text-teal-100/80">Pending partner bank licensing — Tap for status</p>
           </div>
         </div>
         <ChevronRight size={18} className="text-teal-200" />
